@@ -8,13 +8,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, col, func, select
 from app.auth import get_current_session
 from app.db import get_session
-from app.models import Application, AuditEvent, Document, Institution, StageConfig, User
+from app.models import Application, AuditEvent, Document, Finding, Institution, StageConfig, User
 from app.schemas import (
     ApplicationDetailResponse,
     ApplicationListItem,
     ApplicationListResponse,
     AuditEventRead,
     DocumentRead,
+    FindingRead,
     StageConfigRead,
 )
 
@@ -235,10 +236,45 @@ def get_application_detail(
         for d in docs
     ]
 
-    # Audit events
+    # Findings
+    doc_map = {d.id: d.original_filename for d in docs}
+    findings = db.exec(
+        select(Finding)
+        .where(Finding.application_id == app.id)
+        .order_by(Finding.created_at.desc())
+    ).all()
+    finding_reads = [
+        FindingRead(
+            id=f.id,
+            application_id=f.application_id,
+            document_id=f.document_id,
+            document_name=doc_map.get(f.document_id or "") if f.document_id else None,
+            check_id=f.check_id,
+            category=f.category,
+            severity=f.severity,
+            title=f.title,
+            explanation=f.explanation,
+            extracted_value=f.extracted_value,
+            expected_value=f.expected_value,
+            evidence_snippet=f.evidence_snippet,
+            page_number=f.page_number,
+            source=f.source,
+            confidence=f.confidence,
+            review_state=f.review_state,
+            reviewed_by_id=f.reviewed_by_id,
+            reviewed_by_name=f.reviewed_by_name,
+            reviewed_at=f.reviewed_at,
+            note=f.note,
+            created_at=f.created_at,
+        )
+        for f in findings
+    ]
+
+    # Audit events across application, its documents, and findings
+    all_entity_ids = [app.id] + [d.id for d in docs] + [f.id for f in findings]
     events = db.exec(
         select(AuditEvent)
-        .where(AuditEvent.entity_id.in_([app.id] + [d.id for d in docs]))
+        .where(AuditEvent.entity_id.in_(all_entity_ids))
         .order_by(AuditEvent.timestamp.desc())
     ).all()
     
@@ -295,6 +331,7 @@ def get_application_detail(
         stages=stage_reads,
         documents=doc_reads,
         audit_events=event_reads,
+        findings=finding_reads,
     )
 
 
@@ -314,9 +351,13 @@ def get_application_audit_trail(
 
     _check_app_access(app, session)
 
+    docs = db.exec(select(Document).where(Document.application_id == app.id)).all()
+    findings = db.exec(select(Finding).where(Finding.application_id == app.id)).all()
+    all_entity_ids = [app.id] + [d.id for d in docs] + [f.id for f in findings]
+
     events = db.exec(
         select(AuditEvent)
-        .where(AuditEvent.entity_id == app.id)
+        .where(AuditEvent.entity_id.in_(all_entity_ids))
         .order_by(AuditEvent.timestamp.desc())
     ).all()
 

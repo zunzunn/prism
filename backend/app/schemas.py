@@ -58,6 +58,72 @@ class DocumentRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ExtractedFieldSchema(BaseModel):
+    field_name: str
+    extracted_value: Optional[str] = None
+    state: str  # extracted | uncertain | not_found
+    page_number: Optional[int] = None
+    evidence_snippet: Optional[str] = None
+
+
+class DocumentExtractionRead(BaseModel):
+    id: str
+    document_id: str
+    application_id: str
+    status: str
+    page_count: int
+    extracted_text: Optional[str] = None
+    extracted_fields: list[ExtractedFieldSchema] = []
+    processed_at: datetime
+    error_message: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class FindingRead(BaseModel):
+    id: str
+    application_id: str
+    document_id: Optional[str] = None
+    document_name: Optional[str] = None
+    check_id: str
+    category: str
+    severity: str
+    title: str
+    explanation: str
+    extracted_value: Optional[str] = None
+    expected_value: Optional[str] = None
+    evidence_snippet: Optional[str] = None
+    page_number: Optional[int] = None
+    source: str
+    confidence: str
+    review_state: str
+    reviewed_by_id: Optional[str] = None
+    reviewed_by_name: Optional[str] = None
+    reviewed_at: Optional[datetime] = None
+    note: Optional[str] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class FindingReviewRequest(BaseModel):
+    state: str  # confirmed | dismissed
+    note: Optional[str] = None
+
+
+class FindingReviewResponse(BaseModel):
+    finding: FindingRead
+    message: str
+
+
+class VerificationRunResponse(BaseModel):
+    document_id: str
+    application_id: str
+    extraction_status: str
+    findings_created: int
+    findings: list[FindingRead]
+
+
 class AuditEventRead(BaseModel):
     id: str
     actor_id: str
@@ -107,3 +173,4 @@ class ApplicationDetailResponse(BaseModel):
     stages: list[StageConfigRead]
     documents: list[DocumentRead]
     audit_events: list[AuditEventRead]
+    findings: list[FindingRead] = []

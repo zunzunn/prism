@@ -2,30 +2,62 @@
 
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import pymupdf as fitz
 from sqlmodel import Session, select
 from app.config import settings
-from app.models import Application, AuditEvent, Document, Institution, StageConfig, User
+from app.models import Application, AuditEvent, Document, DocumentExtraction, Finding, Institution, StageConfig, User
+from app.services.verification_pipeline import VerificationPipeline
 
 
-def create_sample_file(storage_dir: Path, filename: str, content: bytes) -> str:
-    """Create a sample file in local storage if not already present."""
+def create_sample_file(storage_dir: Path, filename: str, content: bytes, overwrite: bool = False) -> str:
+    """Create a sample file in local storage if not already present or if replacement is needed."""
     storage_dir.mkdir(parents=True, exist_ok=True)
     file_path = storage_dir / filename
-    if not file_path.exists():
+    if not file_path.exists() or overwrite or file_path.stat().st_size <= 350:
         file_path.write_bytes(content)
     return filename
+
+
+def create_sample_pdf(lines: list[str]) -> bytes:
+    """Generate a clean PDF with selectable text lines using PyMuPDF."""
+    doc = fitz.open()
+    page = doc.new_page()
+    y = 60
+    for line in lines:
+        page.insert_text((50, y), line, fontsize=11)
+        y += 24
+    b = doc.tobytes()
+    doc.close()
+    return b
 
 
 def seed_database(session: Session, force: bool = False) -> None:
     """Seed the database with realistic, deterministic sample data."""
     existing_stage = session.exec(select(StageConfig)).first()
     if existing_stage and not force:
-        # Database already populated and not forced to reseed
+        # Check if verification results already seeded
+        existing_ext = session.exec(select(DocumentExtraction)).first()
+        if not existing_ext:
+            # Populate extractions for existing seeded docs
+            docs = session.exec(select(Document)).all()
+            user_off = session.exec(select(User).where(User.role == "officer")).first()
+            if user_off and docs:
+                for d in docs:
+                    app = session.get(Application, d.application_id)
+                    inst = session.get(Institution, app.institution_id) if app else None
+                    if app and inst:
+                        VerificationPipeline.process_document(
+                            document=d,
+                            application=app,
+                            institution=inst,
+                            actor=user_off,
+                            db=session,
+                        )
         return
 
     if force:
-        # Clean existing tables
-        for model in [AuditEvent, Document, Application, StageConfig, User, Institution]:
+        # Clean existing tables in dependency order
+        for model in [AuditEvent, Finding, DocumentExtraction, Document, Application, StageConfig, User, Institution]:
             records = session.exec(select(model)).all()
             for r in records:
                 session.delete(r)
@@ -299,15 +331,46 @@ def seed_database(session: Session, force: bool = False) -> None:
     for app in applications:
         session.add(app)
 
-    # 5. Seed Real Dummy Files and Document Records
-    # Minimal valid PDF payload
-    pdf_sample = b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /Resources <<>> /MediaBox [0 0 612 792] >>\nendobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \ntrailer\n<< /Size 4 /Root 1 0 R >>\nstartxref\n190\n%%EOF\n"
-    # Minimal 1x1 PNG payload
+    # 5. Seed Real Dummy Files with extractable text and Document Records
+    post_sub_date = (now + timedelta(days=12)).strftime("%d %b %Y")
+    land_deed_pdf = create_sample_pdf([
+        "GOVERNMENT REVENUE & LAND REGISTRATION RECORD",
+        "==================================================",
+        "Institution Name: Apex Institute of Technology",
+        "Registration Deed No: DEED-MAH-2026-8841",
+        f"Date of Registration: {post_sub_date}",
+        "Plot Allocation: Western Educational Enclave",
+        "Title Status: Verified and Free from Encumbrances",
+    ])
+
+    # Mandatory disclosure: Apex Institute of Technology, valid dates
+    disclosure_pdf = create_sample_pdf([
+        "AICTE MANDATORY DISCLOSURE 2026-2027",
+        "==================================================",
+        "Institution Name: Apex Institute of Technology",
+        "Document Ref No: DISC-2026-AIT-09",
+        "Date of Issuance: 12 Jan 2026",
+        "Principal / Director: Dr. Ramesh Gupta",
+        "Approved Academic Year: 2026-2027",
+        "Total Approved Intake: 480 Seats",
+    ])
+
+    # Building safety: Apex Technical Academy (inconsistent), expired validity 15 Jan 2024
+    safety_cert_pdf = create_sample_pdf([
+        "FIRE & STRUCTURAL SAFETY COMPLIANCE CERTIFICATE",
+        "==================================================",
+        "Institution Name: Apex Technical Academy",
+        "Certificate No: STR-CERT-2023-110",
+        "Date of Issue: 15 Jan 2023",
+        "Expiry date: 15 Jan 2024",
+        "Issuing Authority: Municipal Fire & Safety Directorate",
+    ])
+
     png_sample = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
 
-    file1 = create_sample_file(settings.storage_dir, "seed_land_deed.pdf", pdf_sample)
-    file2 = create_sample_file(settings.storage_dir, "seed_mandatory_disclosure.pdf", pdf_sample)
-    file3 = create_sample_file(settings.storage_dir, "seed_building_safety.pdf", pdf_sample)
+    file1 = create_sample_file(settings.storage_dir, "seed_land_deed.pdf", land_deed_pdf, overwrite=True)
+    file2 = create_sample_file(settings.storage_dir, "seed_mandatory_disclosure.pdf", disclosure_pdf, overwrite=True)
+    file3 = create_sample_file(settings.storage_dir, "seed_building_safety.pdf", safety_cert_pdf, overwrite=True)
     file4 = create_sample_file(settings.storage_dir, "seed_campus_layout.png", png_sample)
 
     documents = [
@@ -317,7 +380,7 @@ def seed_database(session: Session, force: bool = False) -> None:
             original_filename="Land_Registration_Deed_2026.pdf",
             storage_filename=file1,
             mime_type="application/pdf",
-            file_size=len(pdf_sample),
+            file_size=len(land_deed_pdf),
             uploaded_by_id="usr-inst-01",
             uploaded_at=now - timedelta(days=5),
             category="Land & Infrastructure",
@@ -328,7 +391,7 @@ def seed_database(session: Session, force: bool = False) -> None:
             original_filename="AICTE_Mandatory_Disclosure_2026.pdf",
             storage_filename=file2,
             mime_type="application/pdf",
-            file_size=len(pdf_sample),
+            file_size=len(disclosure_pdf),
             uploaded_by_id="usr-inst-01",
             uploaded_at=now - timedelta(days=5),
             category="Institutional Disclosure",
@@ -339,7 +402,7 @@ def seed_database(session: Session, force: bool = False) -> None:
             original_filename="Building_Safety_Certificate.pdf",
             storage_filename=file3,
             mime_type="application/pdf",
-            file_size=len(pdf_sample),
+            file_size=len(safety_cert_pdf),
             uploaded_by_id="usr-inst-01",
             uploaded_at=now - timedelta(days=18),
             category="Safety Compliance",
@@ -410,3 +473,24 @@ def seed_database(session: Session, force: bool = False) -> None:
         session.add(evt)
 
     session.commit()
+
+    # 7. Run initial deterministic verification on seeded documents so findings exist for review
+    officer_user = users[2]  # Priya Sharma (usr-off-01)
+    inst_apex = institutions[0]
+    inst_horizon = institutions[1]
+
+    doc_meta = [
+        (documents[0], applications[0], inst_apex),
+        (documents[1], applications[0], inst_apex),
+        (documents[2], applications[1], inst_apex),
+        (documents[3], applications[4], inst_horizon),
+    ]
+
+    for doc, app, inst in doc_meta:
+        VerificationPipeline.process_document(
+            document=doc,
+            application=app,
+            institution=inst,
+            actor=officer_user,
+            db=session,
+        )

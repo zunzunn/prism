@@ -72,6 +72,45 @@ class Document(SQLModel, table=True):
     category: Optional[str] = Field(default=None)
 
 
+class DocumentExtraction(SQLModel, table=True):
+    __tablename__ = "document_extractions"
+
+    id: str = Field(primary_key=True)
+    document_id: str = Field(index=True, unique=True)
+    application_id: str = Field(index=True)
+    status: str = Field(default="pending", index=True)  # pending | completed | empty | failed | unsupported
+    page_count: int = Field(default=0)
+    extracted_text: Optional[str] = Field(default=None)
+    extracted_fields_json: Optional[str] = Field(default=None)  # JSON string of list[ExtractedField]
+    processed_at: datetime = Field(default_factory=utc_now)
+    error_message: Optional[str] = Field(default=None)
+
+
+class Finding(SQLModel, table=True):
+    __tablename__ = "findings"
+
+    id: str = Field(primary_key=True)
+    application_id: str = Field(index=True)
+    document_id: Optional[str] = Field(default=None, index=True)
+    check_id: str = Field(index=True)
+    category: str = Field(default="Consistency")  # Consistency | Validity | Completeness
+    severity: str = Field(index=True)  # high | medium | low
+    title: str
+    explanation: str
+    extracted_value: Optional[str] = Field(default=None)
+    expected_value: Optional[str] = Field(default=None)
+    evidence_snippet: Optional[str] = Field(default=None)
+    page_number: Optional[int] = Field(default=None)
+    source: str = Field(default="rule")  # rule | ai_mock
+    confidence: str = Field(default="high")  # high | medium | low
+    review_state: str = Field(default="needs_review", index=True)  # needs_review | confirmed | dismissed
+    reviewed_by_id: Optional[str] = Field(default=None)
+    reviewed_by_name: Optional[str] = Field(default=None)
+    reviewed_at: Optional[datetime] = Field(default=None)
+    note: Optional[str] = Field(default=None)
+    created_at: datetime = Field(default_factory=utc_now)
+
+
 class AuditEvent(SQLModel, table=True):
     __tablename__ = "audit_events"
 
