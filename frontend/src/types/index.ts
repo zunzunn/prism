@@ -81,9 +81,72 @@ export interface AuditEventRead {
   detail?: Record<string, unknown> | null;
 }
 
+export interface ExtractedFieldSchema {
+  field_name: string;
+  extracted_value?: string | null;
+  state: 'extracted' | 'uncertain' | 'not_found';
+  page_number?: number | null;
+  evidence_snippet?: string | null;
+}
+
+export interface DocumentExtractionRead {
+  id: string;
+  document_id: string;
+  application_id: string;
+  status: string;
+  page_count: number;
+  extracted_text?: string | null;
+  extracted_fields: ExtractedFieldSchema[];
+  processed_at: string;
+  error_message?: string | null;
+}
+
+export interface FindingRead {
+  id: string;
+  application_id: string;
+  document_id?: string | null;
+  document_name?: string | null;
+  check_id: string;
+  category: string;
+  severity: 'high' | 'medium' | 'low';
+  title: string;
+  explanation: string;
+  extracted_value?: string | null;
+  expected_value?: string | null;
+  evidence_snippet?: string | null;
+  page_number?: number | null;
+  source: string;
+  confidence: 'high' | 'medium' | 'low';
+  review_state: 'needs_review' | 'confirmed' | 'dismissed';
+  reviewed_by_id?: string | null;
+  reviewed_by_name?: string | null;
+  reviewed_at?: string | null;
+  note?: string | null;
+  created_at: string;
+}
+
+export interface FindingReviewRequest {
+  state: 'confirmed' | 'dismissed';
+  note?: string;
+}
+
+export interface FindingReviewResponse {
+  finding: FindingRead;
+  message: string;
+}
+
+export interface VerificationRunResponse {
+  document_id: string;
+  application_id: string;
+  extraction_status: string;
+  findings_created: number;
+  findings: FindingRead[];
+}
+
 export interface ApplicationDetailResponse {
   application: ApplicationListItem;
   stages: StageConfigRead[];
   documents: DocumentRead[];
   audit_events: AuditEventRead[];
+  findings?: FindingRead[];
 }
