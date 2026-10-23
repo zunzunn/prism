@@ -159,3 +159,4 @@ Or trigger it directly from Settings once implemented in Phase 4.
 1. **Demo Authentication**: The one-click login issues HMAC-SHA256 signed session tokens. In production, this must be replaced by OAuth2/OIDC with proper multi-factor authentication and official government credential verification.
 2. **File Storage**: Uploads are stored locally in `backend/storage/uploads/` using sanitized server-generated filenames. In production, this should interface with private S3/GCS object storage with pre-signed access URLs.
 3. **MIME and Header Verification**: File types are verified via magic byte inspection (`%PDF-`, PNG, JPEG) and extension matching. While this prevents file-type spoofing, it does not prove the legal authenticity of the regulatory document.
+# prism
