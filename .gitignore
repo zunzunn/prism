@@ -1,0 +1,53 @@
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+.eggs/
+
+# SQLite & local database
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploaded files in local storage (except gitkeep)
+backend/storage/uploads/*
+!backend/storage/uploads/.gitkeep
+
+# Environment variables & local secrets
+.env
+.env.local
+.env.*.local
+*.pem
+
+# Test & coverage
+coverage/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE & editors
+.vscode/
+.idea/
+*.swp
+*.swo
