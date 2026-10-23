@@ -1,0 +1,61 @@
+@import './tokens.css';
+@import './fonts.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  /* Theme crossfade transition */
+  html:not([data-reduce-motion="true"]) body,
+  html:not([data-reduce-motion="true"]) [data-theme-transition] {
+    transition: background-color 200ms cubic-bezier(0.22, 1, 0.36, 1),
+                color 200ms cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Focus visible styles across all themes */
+  :focus-visible {
+    outline: var(--focus-width, 2px) solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Prism signature accent line / touch */
+.prism-gradient-border {
+  border-image: var(--prism) 1;
+}
+
+.prism-gradient-bg {
+  background: var(--prism);
+}
+
+/* Reduced motion overrides */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html[data-reduce-motion="true"] *,
+html[data-reduce-motion="true"] ::before,
+html[data-reduce-motion="true"] ::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
