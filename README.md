@@ -11,7 +11,8 @@ PRISM is an AI-assisted regulatory workflow and compliance monitoring platform d
 * **Frontend**: React 18, TypeScript (Strict), Vite, Tailwind CSS, TanStack Query, Radix UI primitives, Lucide React, and Motion.
 * **Design System**: Calm Ledger aesthetic with six semantic themes (`daylight`, `dusk`, `void`, `paper`, `contrast-light`, `contrast-dark`) passing WCAG 2.2 AA / AAA contrast requirements.
 * **Backend**: FastAPI, Python 3.12, Uvicorn, Pydantic, SQLModel, and SQLite.
-* **Storage**: Local document storage in `backend/storage/uploads/`.
+* **Storage**: Secure local document storage in `backend/storage/uploads/`.
+* **Authentication**: Cryptographically signed HMAC-SHA256 session tokens with role-based access enforcement.
 
 ---
 
@@ -24,14 +25,28 @@ prism/
 ├── backend/                  # FastAPI service
 │   ├── pyproject.toml        # Backend dependencies & metadata
 │   ├── requirements.txt      # Pip-compatible dependency requirements
-│   ├── main.py               # Application entry point & CORS configuration
+│   ├── main.py               # Application entry point, lifespan, and CORS setup
 │   ├── app/
-│   │   ├── config.py         # Application configuration & environment settings
+│   │   ├── config.py         # Application settings (secret keys, storage, db)
+│   │   ├── db.py             # SQLite engine and session generator
+│   │   ├── auth.py           # HMAC-SHA256 session token management & RBAC
+│   │   ├── models.py         # SQLModel entities (User, Application, Document, etc.)
+│   │   ├── schemas.py        # Pydantic request/response schemas
+│   │   ├── seed.py           # Deterministic & idempotent sample data generator
 │   │   └── routers/
-│   │       └── health.py     # Health check & system status endpoints
+│   │       ├── health.py     # Health check & system status
+│   │       ├── auth.py       # One-click demo login, session restore, logout
+│   │       ├── applications.py # Application listing, filtering, search & dossier
+│   │       ├── documents.py  # File upload validation, storage, and preview
+│   │       └── demo.py       # Demo reset control endpoint
 │   ├── storage/uploads/      # Local file storage for uploaded documents
 │   └── tests/
-│       └── test_health.py    # Health check & system tests
+│       ├── conftest.py       # Session-scoped test fixtures
+│       ├── test_health.py    # Health check tests
+│       ├── test_auth.py      # Session token and authentication tests
+│       ├── test_seed.py      # Persistence and idempotency tests
+│       ├── test_applications.py # Role access and application listing tests
+│       └── test_documents.py # Upload validation and secure download tests
 └── frontend/                 # React + TypeScript Vite frontend
     ├── package.json          # Frontend dependencies & npm scripts
     ├── vite.config.ts        # Vite configuration & backend proxy
@@ -41,16 +56,31 @@ prism/
     │   ├── main.tsx          # Client entrypoint
     │   ├── App.tsx           # Providers and root routing
     │   ├── app/
-    │   │   ├── router.tsx    # Route definitions
-    │   │   ├── providers.tsx # QueryClient & MotionConfig
+    │   │   ├── router.tsx    # Route definitions (Protected routes)
+    │   │   ├── providers.tsx # QueryClient, AuthProvider & MotionConfig
     │   │   └── layout/       # AppShell, Sidebar, TopBar, ThemeMenu
     │   ├── styles/           # Design tokens, typography, and globals
     │   ├── lib/              # API client, theme switcher, motion, contrast test
     │   ├── components/       # StatusBadge, DemoPill, Button, Card
-    │   ├── features/         # Foundation readiness and route placeholders
+    │   ├── features/
+    │   │   ├── auth/         # SignInPage, AuthContext, ProtectedRoute
+    │   │   ├── applications/ # ListPage, DossierPage
+    │   │   └── foundation/   # Foundation readiness and route placeholders
     │   └── types/            # Domain TypeScript interfaces
     └── dist/                 # Production build output
 ```
+
+---
+
+## Demo Roles & Access Permissions
+
+PRISM features a lightweight, passwordless one-click authentication system tailored for demonstration:
+
+| Role | Demo Persona | Institution | Permissions |
+|---|---|---|---|
+| **Institution User** | Dr. Ramesh Gupta | Apex Institute of Technology (`inst-01`) | Views only their institution's applications, uploads supporting documents, views dossiers for their institution. Cross-institution access is strictly denied. |
+| **Review Officer** | Priya Sharma | Regulatory Review Bureau | Reviews all assigned applications across institutions, inspects dossiers, advances stages, downloads documents. |
+| **System Administrator** | Vikramaditya Nair | System Administration | Global visibility over all institutions, applications, users, documents, and audit logs. |
 
 ---
 
@@ -75,7 +105,7 @@ pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
-Verify backend health at `http://localhost:8000/api/health` or browse interactive documentation at `http://localhost:8000/docs`.
+Verify backend health at `http://localhost:8000/api/health` or browse interactive OpenAPI documentation at `http://localhost:8000/docs`.
 
 ### 2. Frontend Application
 
@@ -87,7 +117,7 @@ npm install
 npm run dev
 ```
 
-Open your browser at `http://localhost:5173`.
+Open your browser at `http://localhost:5173`. If you are not authenticated, you will be redirected to the `/signin` screen.
 
 ---
 
@@ -100,12 +130,32 @@ Run the verification suite across both projects:
 cd frontend
 npm run typecheck    # TypeScript compiler check (0 errors)
 npm run lint         # ESLint check (0 errors, 0 warnings)
-npm run test         # Vitest test suite (all 30 WCAG contrast tests passing)
+npm run test         # Vitest test suite (32 tests passing: WCAG contrast + auth storage)
 npm run build        # Production bundle build
 ```
 
 ### Backend
 ```bash
 cd backend
-uv run pytest        # Pytest test suite (health check endpoint tests passing)
+uv run pytest        # Pytest test suite (28 tests passing: auth, seed, applications, documents)
 ```
+
+---
+
+## Resetting Demo Data
+
+To reset the SQLite database back to its deterministic seed state with relative dates:
+
+```bash
+curl -X POST http://localhost:8000/api/demo/reset
+```
+
+Or trigger it directly from Settings once implemented in Phase 4.
+
+---
+
+## Security & Demo Limitations
+
+1. **Demo Authentication**: The one-click login issues HMAC-SHA256 signed session tokens. In production, this must be replaced by OAuth2/OIDC with proper multi-factor authentication and official government credential verification.
+2. **File Storage**: Uploads are stored locally in `backend/storage/uploads/` using sanitized server-generated filenames. In production, this should interface with private S3/GCS object storage with pre-signed access URLs.
+3. **MIME and Header Verification**: File types are verified via magic byte inspection (`%PDF-`, PNG, JPEG) and extension matching. While this prevents file-type spoofing, it does not prove the legal authenticity of the regulatory document.
