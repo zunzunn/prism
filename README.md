@@ -30,14 +30,19 @@ prism/
 │   │   ├── config.py         # Application settings (secret keys, storage, db)
 │   │   ├── db.py             # SQLite engine and session generator
 │   │   ├── auth.py           # HMAC-SHA256 session token management & RBAC
-│   │   ├── models.py         # SQLModel entities (User, Application, Document, etc.)
+│   │   ├── models.py         # SQLModel entities (User, Application, Document, Finding, Extraction)
 │   │   ├── schemas.py        # Pydantic request/response schemas
 │   │   ├── seed.py           # Deterministic & idempotent sample data generator
+│   │   ├── services/         # Decoupled verification services
+│   │   │   ├── document_processor.py # PyMuPDF text & page layout extraction
+│   │   │   ├── field_extractor.py   # Deterministic structured entity extraction
+│   │   │   └── verification_pipeline.py # Deterministic regulatory cross-checks
 │   │   └── routers/
 │   │       ├── health.py     # Health check & system status
 │   │       ├── auth.py       # One-click demo login, session restore, logout
 │   │       ├── applications.py # Application listing, filtering, search & dossier
 │   │       ├── documents.py  # File upload validation, storage, and preview
+│   │       ├── verification.py # Document verification, extraction, and finding review
 │   │       └── demo.py       # Demo reset control endpoint
 │   ├── storage/uploads/      # Local file storage for uploaded documents
 │   └── tests/
@@ -46,7 +51,8 @@ prism/
 │       ├── test_auth.py      # Session token and authentication tests
 │       ├── test_seed.py      # Persistence and idempotency tests
 │       ├── test_applications.py # Role access and application listing tests
-│       └── test_documents.py # Upload validation and secure download tests
+│       ├── test_documents.py # Upload validation and secure download tests
+│       └── test_verification.py # PyMuPDF extraction, checks, and review tests
 └── frontend/                 # React + TypeScript Vite frontend
     ├── package.json          # Frontend dependencies & npm scripts
     ├── vite.config.ts        # Vite configuration & backend proxy
@@ -61,7 +67,7 @@ prism/
     │   │   └── layout/       # AppShell, Sidebar, TopBar, ThemeMenu
     │   ├── styles/           # Design tokens, typography, and globals
     │   ├── lib/              # API client, theme switcher, motion, contrast test
-    │   ├── components/       # StatusBadge, DemoPill, Button, Card
+    │   ├── components/       # StatusBadge, DemoPill, Button, Card, FindingCard, DocumentExtractionDrawer
     │   ├── features/
     │   │   ├── auth/         # SignInPage, AuthContext, ProtectedRoute
     │   │   ├── applications/ # ListPage, DossierPage
@@ -131,14 +137,40 @@ cd frontend
 npm run typecheck    # TypeScript compiler check (0 errors)
 npm run lint         # ESLint check (0 errors, 0 warnings)
 npm run test         # Vitest test suite (32 tests passing: WCAG contrast + auth storage)
-npm run build        # Production bundle build
+npm run build        # Production bundle build (clean Vite build, zero errors)
 ```
 
 ### Backend
 ```bash
 cd backend
-uv run pytest        # Pytest test suite (28 tests passing: auth, seed, applications, documents)
+uv run pytest        # Pytest test suite (37 tests passing: auth, seed, applications, documents, verification)
 ```
+
+---
+
+## Document Verification Engine (Phase 3)
+
+The PRISM Document Verification Engine automatically processes uploaded supporting documents and executes deterministic compliance checks against application records:
+
+1. **Extraction Pipeline (`DocumentProcessor` & `FieldExtractor`)**:
+   - Uses **PyMuPDF** to extract page streams and text layers cleanly.
+   - Extracts structured regulatory entities: Institution Name, Document Identifiers, Registration/Issuance Dates, Certificate Expiry Dates, and Land Survey Numbers.
+   - Uses explicit states (`extracted`, `uncertain`, `not_found`) rather than fabricating artificial confidence scores.
+   - Preserves verbatim monospace text excerpts and page references for auditing.
+
+2. **Deterministic Regulatory Cross-Checks (`VerificationPipeline`)**:
+   - `CHK_INST_MATCH`: Discrepancy between document institution and application record.
+   - `CHK_DATE_ORDER`: Certificate dated later than application submission.
+   - `CHK_EXPIRY_PAST`: Expired certificate (High severity).
+   - `CHK_EXPIRY_SOON`: Certificate expiring within 60 days (Medium severity).
+   - `CHK_MISSING_SURVEY`: Missing land survey or plot allocation reference.
+   - `CHK_EMPTY_DOC`: Empty file payload (0 bytes).
+   - `CHK_CORRUPT_DOC`: Unreadable or corrupt document binary.
+
+3. **Human Review Workflow (`FindingCard`)**:
+   - Regulatory Officers can **Confirm** or **Dismiss** findings with optional audit notes.
+   - Mandatory disclaimer: *"Findings are possible issues flagged for human review. They do not establish authenticity or decide outcomes."*
+   - Institution users view findings in read-only mode without internal reviewer actions.
 
 ---
 
@@ -159,4 +191,4 @@ Or trigger it directly from Settings once implemented in Phase 4.
 1. **Demo Authentication**: The one-click login issues HMAC-SHA256 signed session tokens. In production, this must be replaced by OAuth2/OIDC with proper multi-factor authentication and official government credential verification.
 2. **File Storage**: Uploads are stored locally in `backend/storage/uploads/` using sanitized server-generated filenames. In production, this should interface with private S3/GCS object storage with pre-signed access URLs.
 3. **MIME and Header Verification**: File types are verified via magic byte inspection (`%PDF-`, PNG, JPEG) and extension matching. While this prevents file-type spoofing, it does not prove the legal authenticity of the regulatory document.
-# prism
+4. **Findings & Compliance**: System-generated findings are possibilities flagged for human review. They do not decide outcomes or certify official legal compliance.

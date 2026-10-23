@@ -11,7 +11,7 @@ PRISM is an AI-assisted regulatory workflow and compliance monitoring platform d
 
 ### Core Stack
 - **Frontend**: React 18, TypeScript (strict), Vite, Tailwind CSS, TanStack Query, Radix UI headless primitives, Lucide React, and Motion.
-- **Backend**: FastAPI, Python 3.12, SQLModel (SQLAlchemy 2.0 ORM), SQLite (`prism.db`), and Uvicorn.
+- **Backend**: FastAPI, Python 3.12/3.13, PyMuPDF (fitz), SQLModel (SQLAlchemy 2.0 ORM), SQLite (`prism.db`), and Uvicorn.
 - **Storage**: Private local disk storage in `backend/storage/uploads/` with sanitized, collision-resistant server-generated filenames.
 - **Authentication**: Stateless HMAC-SHA256 cryptographically signed session tokens with role and institution claim validation on every protected route.
 
@@ -30,114 +30,89 @@ PRISM is an AI-assisted regulatory workflow and compliance monitoring platform d
 ### Phase 2: Authentication & Core Application Management (Completed)
 - **Demo Authentication System**:
   - One-click sign-in screen at `/signin` (440px centered card, 2px prism top edge, delta logo, persistent sample-data disclaimer).
-  - Supported roles:
-    - `institution_user`: Dr. Ramesh Gupta (Apex Institute of Technology, `inst-01`)
-    - `officer`: Priya Sharma (Regulatory Review Bureau)
-    - `admin`: Vikramaditya Nair (PRISM System Administration)
-    - Disabled concept cards for Committee Reviewer and Auditor.
+  - Supported roles: `institution_user`, `officer`, and `admin`.
   - Endpoints: `POST /api/demo-login`, `GET /api/me`, `POST /api/logout`.
-  - Frontend `AuthContext` with session restoration from `localStorage` (`prism.auth_token`) and automatic Bearer token injection in `apiClient`.
 - **Database & Relative-Date Seed Data**:
   - SQLModel tables: `User`, `Institution`, `StageConfig`, `Application`, `Document`, `AuditEvent`.
-  - Deterministic seeder with relative dates (`now + 6 days`, `now - 3 days` for overdue tasks), populating 12 diverse applications across 3 institutions and 8 stages.
-  - Idempotent seeding during application lifespan startup; reset endpoint at `POST /api/demo/reset`.
+  - Deterministic seeder with relative dates, populating 12 diverse applications across 3 institutions and 8 stages.
 - **Applications List View & API**:
-  - Endpoint `GET /api/applications` with server-side pagination, search (ref, institution, program type), stage filtering, status filtering, and sorting.
-  - Priority detection flagging overdue tasks and attention-requiring dossiers.
-  - Role-based scoping: Institution users strictly view applications belonging to their institution; officers and admins view all applications.
-  - Frontend `ListPage.tsx` with filter bar, responsive data table, and pagination controls.
+  - Endpoint `GET /api/applications` with server-side pagination, search, stage filtering, status filtering, and sorting.
+  - Role-based scoping: Institution users view only their institution's applications; officers and admins view all applications.
 - **Application Dossier**:
-  - Route `/applications/:id` with application header (ref, institution, program type, owner, deadline).
-  - Data-driven 8-stage progress tracker with completed indicators and active **prism gradient** segment.
-  - Dossier tabs:
-    - **Summary**: Structured particulars and institutional governance details.
-    - **Documents**: File list with metadata, upload timestamp, and preview/download links.
-    - **Audit History**: Chronological vertical event timeline.
-  - Error and authorization handling: 404 for missing applications and 403 for cross-institution access attempts.
+  - Route `/applications/:id` with application particulars, 8-stage progress tracker, and audit history.
 - **Real Document Uploads & Storage**:
   - Drag-and-drop dropzone supporting PDF, PNG, and JPEG formats up to 10 MB.
   - Magic byte verification (`%PDF-`, `\x89PNG`, `\xff\xd8\xff`) to prevent MIME spoofing.
-  - Storage under `backend/storage/uploads/` with UUID-prefixed filenames.
   - Authenticated preview and download endpoint `GET /api/documents/{id}/file`.
-  - Automatic `AuditEvent` logging upon upload.
+
+### Phase 3: Document Verification Engine (Completed)
+- **PyMuPDF Document Processing Engine (`backend/app/services/document_processor.py`)**:
+  - Robust text and page layout extraction using PyMuPDF (`pymupdf`).
+  - Graceful, exception-safe handling for:
+    - Empty files (0 bytes / 0 pages) → marked as `empty` with clear warning.
+    - Corrupt or invalid PDFs (`fitz.FileDataError`) → marked as `failed` without server crashing.
+    - Scanned/image-only PDFs → detected and flagged with advisory notices.
+    - Image documents (PNG, JPEG) → validated for dimensions and optical structure.
+- **Structured Field Extraction Service (`backend/app/services/field_extractor.py`)**:
+  - Deterministic entity parsing extracting:
+    - Institution name
+    - Document reference / registration / certificate numbers
+    - Dates (registration, issuance, and certificate expiry)
+    - Land details (survey / khasra numbers)
+  - Explicit extraction states: `extracted`, `uncertain`, and `not_found` (no fabricated numerical confidence percentages).
+  - Extracts verbatim surrounding evidence excerpts (monospace context snippets) and exact page references.
+- **Modular Verification Pipeline (`backend/app/services/verification_pipeline.py`)**:
+  - Pipeline completely decoupled from route handlers.
+  - Idempotent execution (removes prior findings for a document on re-processing to prevent duplication).
+  - Deterministic regulatory cross-checks:
+    - `CHK_INST_MATCH`: Identifies discrepancies between document institution name and registered application record.
+    - `CHK_DATE_ORDER`: Detects certificates dated later than the application submission date.
+    - `CHK_EXPIRY_PAST`: Flags expired compliance certificates (High severity).
+    - `CHK_EXPIRY_SOON`: Flags certificates expiring within 60 days (Medium severity).
+    - `CHK_MISSING_SURVEY`: Flags land deeds lacking required survey/khasra numbers.
+    - `CHK_MISSING_CERT_NO`: Flags safety documents lacking certificate reference numbers.
+    - `CHK_EMPTY_DOC`: Flags 0-byte or blank document payloads.
+    - `CHK_CORRUPT_DOC`: Flags unreadable or corrupt file binaries.
+  - Automatic escalation: flags application `current_status = "needs_attention"` when high-severity findings are detected.
+  - Generates immutable `AuditEvent` records upon each verification run.
+- **Verification & Findings API (`backend/app/routers/verification.py`)**:
+  - `POST /api/documents/{document_id}/verify`: Executes verification on an authorized document.
+  - `GET /api/documents/{document_id}/extraction`: Retrieves structured fields, states, and text layer.
+  - `GET /api/applications/{application_id}/findings`: Lists findings with optional `severity`, `review_state`, and `category` filters.
+  - `POST /api/findings/{finding_id}/review`: Records human review decisions (`confirmed` or `dismissed`) with optional reviewer note, enforced by RBAC (officer/admin only; institution users receive 403 Forbidden) and generates audit events.
+- **Frontend Dossier UI Enhancement (`frontend/src/features/applications/DossierPage.tsx`)**:
+  - **Findings & Verification Tab**:
+    - Filter chips: `All`, `Needs review`, `Confirmed`, `Dismissed`, plus severity selector.
+    - Dynamic count badge in the tab header showing pending review items.
+    - Mandatory disclaimer footer: *"Findings are possible issues flagged for human review. They do not establish authenticity or decide outcomes."*
+  - **FindingCard Component (`frontend/src/components/FindingCard.tsx`)**:
+    - Conforms strictly to `design.md` §6.11.
+    - Severity badge, plain-language explanation, evidence block with monospace verbatim excerpt and comparison values (extracted vs expected).
+    - Source and confidence labels.
+    - Officer review actions with confirmation dialog and note input.
+    - Read-only presentation for Institution users.
+  - **DocumentExtractionDrawer (`frontend/src/components/DocumentExtractionDrawer.tsx`)**:
+    - Inspects parsed structured entities with status badges (`extracted`, `uncertain`, `not_found`), page numbers, and verbatim text contexts.
+    - Full extracted raw text stream viewer.
+  - **Documents Tab Integration**:
+    - "Extractions" inspection button and "Verify" action button per document row.
+    - Auto-verification upon document upload.
 
 ---
 
-## 3. Current Directory Structure
-
-```
-prism/
-├── design.md                 # Primary design & architecture specification
-├── context.md                # Ongoing progress & implementation context
-├── README.md                 # Project architecture, setup, and verification guide
-├── .env.example              # Environment variables template
-├── backend/                  # FastAPI backend
-│   ├── pyproject.toml        # Dependencies and packaging
-│   ├── requirements.txt      # Pip dependencies
-│   ├── main.py               # App entrypoint, lifespan seeding, router mounting
-│   ├── app/
-│   │   ├── config.py         # Application settings (secret keys, storage, db)
-│   │   ├── db.py             # SQLite engine & session management
-│   │   ├── auth.py           # HMAC-SHA256 session token management & RBAC
-│   │   ├── models.py         # SQLModel database entities
-│   │   ├── schemas.py        # Pydantic request & response schemas
-│   │   ├── seed.py           # Relative-date idempotent seed data generator
-│   │   └── routers/
-│   │       ├── health.py     # /api/health
-│   │       ├── auth.py       # /api/demo-login, /api/me, /api/logout
-│   │       ├── applications.py # /api/applications, /api/applications/{id}
-│   │       ├── documents.py  # /api/applications/{id}/documents, /api/documents/{id}/file
-│   │       └── demo.py       # /api/demo/reset
-│   ├── storage/uploads/      # Local document storage directory
-│   └── tests/
-│       ├── conftest.py       # Test database setup fixture
-│       ├── test_health.py    # Health check endpoint tests
-│       ├── test_auth.py      # Authentication and token validation tests
-│       ├── test_seed.py      # Seeding persistence & idempotency tests
-│       ├── test_applications.py # Listing, filtering, and RBAC tests
-│       └── test_documents.py # Upload validation, size limits, and download tests
-└── frontend/                 # React + TypeScript frontend
-    ├── package.json          # Dependencies & scripts
-    ├── vite.config.ts        # Vite configuration & backend proxy
-    ├── tailwind.config.ts    # Semantic token mappings & theme configuration
-    ├── eslint.config.js      # ESLint 9 configuration with strict rules
-    ├── index.html            # Root HTML with delta mark
-    ├── src/
-    │   ├── main.tsx          # Application entrypoint
-    │   ├── App.tsx           # Providers & RouterProvider
-    │   ├── app/
-    │   │   ├── router.tsx    # App routes & ProtectedRoute setup
-    │   │   ├── providers.tsx # QueryClient, AuthProvider & MotionConfig
-    │   │   └── layout/       # AppShell, Sidebar, TopBar, ThemeMenu, PageTransition
-    │   ├── styles/           # tokens.css, fonts.css, globals.css
-    │   ├── lib/              # api.ts, theme.ts, motion.ts, statusMap.ts, dates.ts
-    │   ├── components/       # StatusBadge, DemoPill, Button, Card
-    │   ├── features/
-    │   │   ├── auth/         # SignInPage, AuthContext, useAuth, ProtectedRoute
-    │   │   ├── applications/ # ListPage, DossierPage
-    │   │   └── foundation/   # FoundationReadinessPage, PlaceholderPage
-    │   └── types/            # TypeScript domain interfaces
-    └── dist/                 # Production build bundle
-```
-
----
-
-## 4. Test Suite & Verification Status
+## 3. Test Suite & Quality Verification Status
 
 | Suite | Runner | Test Count | Status |
 |---|---|---|---|
-| **Backend API & RBAC** | `uv run pytest` | 28 tests | **All Passed** (0.64s) |
-| **Frontend Contrast & Tokens** | `npm run test` (Vitest) | 30 tests | **All Passed** (30 WCAG AA/AAA theme pairings) |
-| **Frontend Auth Storage** | `npm run test` (Vitest) | 2 tests | **All Passed** (Storage lifecycle) |
+| **Backend Verification & API** | `uv run pytest` | 37 tests | **All Passed** (0.83s) |
+| **Frontend Verification & Status** | `npm run test` (Vitest) | 34 tests | **All Passed** (0.33s) |
 | **TypeScript Strictness** | `npm run typecheck` | N/A | **0 errors** (`tsc --noEmit`) |
 | **ESLint 9** | `npm run lint` | N/A | **0 errors, 0 warnings** |
-| **Production Build** | `npm run build` | N/A | **Clean build** (2.17s) |
+| **Production Build** | `npm run build` | N/A | **Clean build** (1.78s) |
 
 ---
 
-## 5. Git Commit History
-
-The repository maintains an incremental, natural-language commit history:
+## 4. Git Commit History
 
 1. `174edc2`: `Initialize project repository and add design specification`
 2. `552ee28`: `Set up backend foundation with FastAPI, health router, and tests`
@@ -151,17 +126,18 @@ The repository maintains an incremental, natural-language commit history:
 10. `9aef1b1`: `Build application dossier with stage tracker, summary details, and audit history`
 11. `b3a47b5`: `Implement secure document uploads with validation, local storage, and preview endpoints`
 12. `9a5f14c`: `Finalize Phase 2 integration, test suite, and setup documentation`
+13. `bf932e1`: `Implement document verification pipeline, deterministic checks, and findings API`
 
 ---
 
-## 6. How to Run Locally
+## 5. How to Run Locally
 
 ### Start Backend
 ```bash
 cd backend
 uv run uvicorn main:app --reload --port 8000
 ```
-- API Documentation: `http://localhost:8000/docs`
+- Interactive API Documentation: `http://localhost:8000/docs`
 - Health check: `http://localhost:8000/api/health`
 
 ### Start Frontend
@@ -173,17 +149,7 @@ npm run dev
 
 ---
 
-## 7. Upcoming Next Phase: Phase 3
-
-### Phase 3 Scope (AI Document Analysis, Verification Findings & Clarifications)
-1. **Rule-Based & Mocked AI Verification Engine**:
-   - Deterministic field extraction checks (registration dates vs. form dates, mandatory disclosures, expiring certificates).
-   - Generates evidence-backed `Finding` cards with source labels (`Rule-based check` or `AI extraction (demo, mocked)`) and confidence labels (`High`, `Medium`, `Low`).
-2. **Findings Review Workflow**:
-   - Review officer can mark findings as `Confirmed` or `Dismissed` with notes.
-   - Findings disclaimer footer: *"Findings are possible issues flagged for human review. They do not establish authenticity or decide outcomes."*
-   - Audit event generated for every finding review transition.
-3. **Clarifications Thread**:
-   - Review officer "Request clarification" dialog pre-linked to findings with due dates.
-   - Institution user reply interface with text and document attachments.
-   - Clarification status lifecycle (`Open` → `Replied` → `Resolved` / `Overdue`).
+## 6. Next Phase: Phase 4 (Clarifications, Deadlines & Alerts)
+- Officer "Request Clarification" workflow linked to findings.
+- Institution user clarification replies with file attachments.
+- Escalation engine, deadlines calendar & priority alerts queue.
