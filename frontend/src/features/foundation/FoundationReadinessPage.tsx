@@ -52,6 +52,13 @@ export const FoundationReadinessPage: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <Button
+            variant="primary"
+            size="sm"
+            onClick={() => window.location.href = '/applications'}
+          >
+            Go to Applications
+          </Button>
+          <Button
             variant="secondary"
             size="sm"
             onClick={handleToggleMotion}

@@ -1,16 +1,36 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppShell } from './layout/AppShell';
+import { SignInPage } from '@/features/auth/SignInPage';
+import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
+import { ListPage } from '@/features/applications/ListPage';
+import { DossierPage } from '@/features/applications/DossierPage';
 import { FoundationReadinessPage } from '@/features/foundation/FoundationReadinessPage';
 import { PlaceholderPage } from '@/features/foundation/PlaceholderPage';
 
 export const router = createBrowserRouter([
   {
+    path: '/signin',
+    element: <SignInPage />,
+  },
+  {
     path: '/',
-    element: <AppShell />,
+    element: (
+      <ProtectedRoute>
+        <AppShell />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
         element: <FoundationReadinessPage />,
+      },
+      {
+        path: 'applications',
+        element: <ListPage />,
+      },
+      {
+        path: 'applications/:id',
+        element: <DossierPage />,
       },
       {
         path: 'overview',
@@ -19,16 +39,6 @@ export const router = createBrowserRouter([
             title="Overview Dashboard"
             phaseScheduled="Phase 4"
             description="Role-adapted overview with attention queue, upcoming deadlines, and stage metrics."
-          />
-        ),
-      },
-      {
-        path: 'applications',
-        element: (
-          <PlaceholderPage
-            title="Applications & Dossier"
-            phaseScheduled="Phase 2 & 3"
-            description="Application list with filters and full dossier (Summary, Documents, Findings, Clarifications, History)."
           />
         ),
       },
@@ -84,7 +94,7 @@ export const router = createBrowserRouter([
       },
       {
         path: '*',
-        element: <Navigate to="/" replace />,
+        element: <Navigate to="/applications" replace />,
       },
     ],
   },

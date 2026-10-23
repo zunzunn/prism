@@ -2,69 +2,88 @@ export type UserRole = 'institution_user' | 'officer' | 'admin';
 
 export interface User {
   id: string;
-  name: string;
+  display_name: string;
+  name?: string;
   role: UserRole;
   email: string;
   institution_id?: string | null;
+  institution_name?: string | null;
+  created_at?: string;
 }
 
 export type ApplicationStage =
-  | 'draft'
-  | 'submitted'
-  | 'document_check'
-  | 'desk_review'
-  | 'clarification'
-  | 'committee_review'
-  | 'decision_pending'
-  | 'closed';
+  | 'stage-draft'
+  | 'stage-submitted'
+  | 'stage-doc-check'
+  | 'stage-desk-review'
+  | 'stage-clarification'
+  | 'stage-committee'
+  | 'stage-decision'
+  | 'stage-closed'
+  | string;
 
-export interface Application {
+export interface ApplicationListItem {
   id: string;
   ref: string;
-  title: string;
   institution_id: string;
-  institution_name?: string;
-  stage_id: ApplicationStage;
+  institution_name: string;
+  application_type: string;
+  academic_year: string;
+  stage_id: string;
+  stage_name: string;
   status: string;
   owner_id?: string | null;
-  submitted_at?: string | null;
-  deadline?: string | null;
+  owner_name?: string | null;
+  submission_timestamp?: string | null;
+  due_date?: string | null;
+  created_at: string;
   updated_at: string;
+  document_count: number;
+  is_priority: boolean;
 }
 
-export type FindingSeverity = 'high' | 'medium' | 'low';
-export type FindingReviewState = 'needs_review' | 'confirmed' | 'dismissed';
-export type FindingSource = 'rule' | 'ai_mock';
+export interface ApplicationListResponse {
+  items: ApplicationListItem[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
 
-export interface Finding {
+export interface StageConfigRead {
+  id: string;
+  name: string;
+  order: number;
+  is_terminal: boolean;
+}
+
+export interface DocumentRead {
   id: string;
   application_id: string;
-  document_id?: string | null;
-  severity: FindingSeverity;
-  title: string;
-  explanation: string;
-  evidence: {
-    document?: string;
-    page?: number;
-    snippet?: string;
-    field?: string;
-    value?: string;
-  };
-  source: FindingSource;
-  confidence: 'high' | 'medium' | 'low';
-  review_state: FindingReviewState;
-  reviewed_by?: string | null;
-  reviewed_at?: string | null;
-  note?: string | null;
+  original_filename: string;
+  mime_type: string;
+  file_size: number;
+  uploaded_by_id: string;
+  uploaded_by_name?: string | null;
+  uploaded_at: string;
+  category?: string | null;
 }
 
-export interface AuditEvent {
+export interface AuditEventRead {
   id: string;
-  application_id?: string | null;
   actor_id: string;
   actor_name: string;
-  actor_role: UserRole;
+  actor_role: string;
   action: string;
-  detail?: Record<string, unknown>;
-  created_at: string;
+  entity_type: string;
+  entity_id: string;
+  timestamp: string;
+  detail?: Record<string, unknown> | null;
+}
+
+export interface ApplicationDetailResponse {
+  application: ApplicationListItem;
+  stages: StageConfigRead[];
+  documents: DocumentRead[];
+  audit_events: AuditEventRead[];
 }

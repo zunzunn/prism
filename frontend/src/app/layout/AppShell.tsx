@@ -67,6 +67,9 @@ export const AppShell: React.FC = () => {
       case '/settings':
         return 'Settings';
       default:
+        if (location.pathname.startsWith('/applications/')) {
+          return 'Application Dossier';
+        }
         return 'PRISM Workspace';
     }
   };

@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MotionConfig } from 'motion/react';
 import { applyTheme, getInitialTheme } from '@/lib/theme';
 import { applyReduceMotion, getInitialReduceMotion } from '@/lib/motion';
+import { AuthProvider } from '@/features/auth/AuthContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,9 +32,11 @@ export const Providers: React.FC<ProvidersProps> = ({ children }) => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
-        {children}
-      </MotionConfig>
+      <AuthProvider>
+        <MotionConfig reducedMotion={reduceMotion ? 'always' : 'user'}>
+          {children}
+        </MotionConfig>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };
