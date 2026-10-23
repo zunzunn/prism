@@ -1,0 +1,412 @@
+"""Deterministic and idempotent demo seed data generator with relative dates."""
+
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from sqlmodel import Session, select
+from app.config import settings
+from app.models import Application, AuditEvent, Document, Institution, StageConfig, User
+
+
+def create_sample_file(storage_dir: Path, filename: str, content: bytes) -> str:
+    """Create a sample file in local storage if not already present."""
+    storage_dir.mkdir(parents=True, exist_ok=True)
+    file_path = storage_dir / filename
+    if not file_path.exists():
+        file_path.write_bytes(content)
+    return filename
+
+
+def seed_database(session: Session, force: bool = False) -> None:
+    """Seed the database with realistic, deterministic sample data."""
+    existing_stage = session.exec(select(StageConfig)).first()
+    if existing_stage and not force:
+        # Database already populated and not forced to reseed
+        return
+
+    if force:
+        # Clean existing tables
+        for model in [AuditEvent, Document, Application, StageConfig, User, Institution]:
+            records = session.exec(select(model)).all()
+            for r in records:
+                session.delete(r)
+        session.commit()
+
+    now = datetime.now(timezone.utc)
+
+    # 1. Institutions
+    institutions = [
+        Institution(
+            id="inst-01",
+            name="Apex Institute of Technology",
+            code="INST-APEX-01",
+            region="Western Region (Mumbai)",
+            created_at=now - timedelta(days=90),
+        ),
+        Institution(
+            id="inst-02",
+            name="Horizon College of Engineering",
+            code="INST-HORIZON-02",
+            region="Northern Region (New Delhi)",
+            created_at=now - timedelta(days=85),
+        ),
+        Institution(
+            id="inst-03",
+            name="Vanguard Polytechnic Institute",
+            code="INST-VANGUARD-03",
+            region="Southern Region (Bengaluru)",
+            created_at=now - timedelta(days=70),
+        ),
+    ]
+    for inst in institutions:
+        session.add(inst)
+
+    # 2. Users
+    users = [
+        User(
+            id="usr-inst-01",
+            display_name="Dr. Ramesh Gupta",
+            email="r.gupta@apextech.example.test",
+            role="institution_user",
+            institution_id="inst-01",
+            is_active=True,
+            created_at=now - timedelta(days=90),
+        ),
+        User(
+            id="usr-inst-02",
+            display_name="Prof. Ananya Roy",
+            email="a.roy@horizon.example.test",
+            role="institution_user",
+            institution_id="inst-02",
+            is_active=True,
+            created_at=now - timedelta(days=85),
+        ),
+        User(
+            id="usr-off-01",
+            display_name="Priya Sharma",
+            email="p.sharma@regulatory.example.test",
+            role="officer",
+            institution_id=None,
+            is_active=True,
+            created_at=now - timedelta(days=120),
+        ),
+        User(
+            id="usr-off-02",
+            display_name="Rajesh Verma",
+            email="r.verma@regulatory.example.test",
+            role="officer",
+            institution_id=None,
+            is_active=True,
+            created_at=now - timedelta(days=110),
+        ),
+        User(
+            id="usr-adm-01",
+            display_name="Vikramaditya Nair",
+            email="admin@regulatory.example.test",
+            role="admin",
+            institution_id=None,
+            is_active=True,
+            created_at=now - timedelta(days=180),
+        ),
+    ]
+    for user in users:
+        session.add(user)
+
+    # 3. Stage Configurations (Standard 8 regulatory approval stages)
+    stages = [
+        StageConfig(id="stage-draft", name="Draft", order=1, is_terminal=False),
+        StageConfig(id="stage-submitted", name="Submitted", order=2, is_terminal=False),
+        StageConfig(id="stage-doc-check", name="Document check", order=3, is_terminal=False),
+        StageConfig(id="stage-desk-review", name="Desk review", order=4, is_terminal=False),
+        StageConfig(id="stage-clarification", name="Clarification", order=5, is_terminal=False),
+        StageConfig(id="stage-committee", name="Committee review", order=6, is_terminal=False),
+        StageConfig(id="stage-decision", name="Decision pending", order=7, is_terminal=False),
+        StageConfig(id="stage-closed", name="Closed", order=8, is_terminal=True),
+    ]
+    for stage in stages:
+        session.add(stage)
+
+    # 4. Applications (12 diverse items across stages, owners, and relative deadlines)
+    applications = [
+        Application(
+            id="app-0001",
+            ref="DEMO-APP-0001",
+            institution_id="inst-01",
+            application_type="Extension of Approval (EoA)",
+            academic_year="2026-2027",
+            current_stage_id="stage-doc-check",
+            current_status="needs_attention",
+            assigned_owner_id="usr-off-01",
+            submission_timestamp=now - timedelta(days=5),
+            due_date=now + timedelta(days=6),
+            created_at=now - timedelta(days=12),
+            updated_at=now - timedelta(hours=4),
+        ),
+        Application(
+            id="app-0002",
+            ref="DEMO-APP-0002",
+            institution_id="inst-01",
+            application_type="Increase in Intake / New Course",
+            academic_year="2026-2027",
+            current_stage_id="stage-clarification",
+            current_status="overdue",
+            assigned_owner_id="usr-off-01",
+            submission_timestamp=now - timedelta(days=18),
+            due_date=now - timedelta(days=3),  # Overdue
+            created_at=now - timedelta(days=25),
+            updated_at=now - timedelta(days=1),
+        ),
+        Application(
+            id="app-0003",
+            ref="DEMO-APP-0003",
+            institution_id="inst-01",
+            application_type="Extension of Approval (EoA)",
+            academic_year="2026-2027",
+            current_stage_id="stage-draft",
+            current_status="draft",
+            assigned_owner_id=None,
+            submission_timestamp=None,
+            due_date=now + timedelta(days=14),
+            created_at=now - timedelta(days=3),
+            updated_at=now - timedelta(hours=2),
+        ),
+        Application(
+            id="app-0004",
+            ref="DEMO-APP-0004",
+            institution_id="inst-01",
+            application_type="Closure of Course / Division",
+            academic_year="2026-2027",
+            current_stage_id="stage-desk-review",
+            current_status="in_progress",
+            assigned_owner_id="usr-off-02",
+            submission_timestamp=now - timedelta(days=14),
+            due_date=now + timedelta(days=8),
+            created_at=now - timedelta(days=20),
+            updated_at=now - timedelta(days=2),
+        ),
+        Application(
+            id="app-0005",
+            ref="DEMO-APP-0005",
+            institution_id="inst-02",
+            application_type="Extension of Approval (EoA)",
+            academic_year="2026-2027",
+            current_stage_id="stage-submitted",
+            current_status="in_progress",
+            assigned_owner_id="usr-off-01",
+            submission_timestamp=now - timedelta(days=2),
+            due_date=now + timedelta(days=10),
+            created_at=now - timedelta(days=8),
+            updated_at=now - timedelta(days=2),
+        ),
+        Application(
+            id="app-0006",
+            ref="DEMO-APP-0006",
+            institution_id="inst-02",
+            application_type="Introduction of Supernumerary Seats",
+            academic_year="2026-2027",
+            current_stage_id="stage-committee",
+            current_status="in_progress",
+            assigned_owner_id="usr-off-02",
+            submission_timestamp=now - timedelta(days=22),
+            due_date=now + timedelta(days=4),
+            created_at=now - timedelta(days=30),
+            updated_at=now - timedelta(days=1),
+        ),
+        Application(
+            id="app-0007",
+            ref="DEMO-APP-0007",
+            institution_id="inst-02",
+            application_type="Change of Site / Location",
+            academic_year="2026-2027",
+            current_stage_id="stage-desk-review",
+            current_status="needs_attention",
+            assigned_owner_id="usr-off-01",
+            submission_timestamp=now - timedelta(days=15),
+            due_date=now + timedelta(days=2),
+            created_at=now - timedelta(days=21),
+            updated_at=now - timedelta(hours=10),
+        ),
+        Application(
+            id="app-0008",
+            ref="DEMO-APP-0008",
+            institution_id="inst-02",
+            application_type="Extension of Approval (EoA)",
+            academic_year="2026-2027",
+            current_stage_id="stage-decision",
+            current_status="in_progress",
+            assigned_owner_id="usr-off-02",
+            submission_timestamp=now - timedelta(days=28),
+            due_date=now + timedelta(days=12),
+            created_at=now - timedelta(days=35),
+            updated_at=now - timedelta(days=3),
+        ),
+        Application(
+            id="app-0009",
+            ref="DEMO-APP-0009",
+            institution_id="inst-03",
+            application_type="New Technical Institution Establishment",
+            academic_year="2026-2027",
+            current_stage_id="stage-doc-check",
+            current_status="overdue",
+            assigned_owner_id="usr-off-01",
+            submission_timestamp=now - timedelta(days=12),
+            due_date=now - timedelta(days=1),  # Overdue
+            created_at=now - timedelta(days=18),
+            updated_at=now - timedelta(days=1),
+        ),
+        Application(
+            id="app-0010",
+            ref="DEMO-APP-0010",
+            institution_id="inst-03",
+            application_type="Extension of Approval (EoA)",
+            academic_year="2026-2027",
+            current_stage_id="stage-closed",
+            current_status="approved",
+            assigned_owner_id="usr-off-02",
+            submission_timestamp=now - timedelta(days=40),
+            due_date=now - timedelta(days=20),
+            created_at=now - timedelta(days=50),
+            updated_at=now - timedelta(days=15),
+        ),
+        Application(
+            id="app-0011",
+            ref="DEMO-APP-0011",
+            institution_id="inst-03",
+            application_type="Conversion of Diploma to Degree",
+            academic_year="2026-2027",
+            current_stage_id="stage-clarification",
+            current_status="awaiting_reply",
+            assigned_owner_id="usr-off-01",
+            submission_timestamp=now - timedelta(days=10),
+            due_date=now + timedelta(days=5),
+            created_at=now - timedelta(days=16),
+            updated_at=now - timedelta(hours=6),
+        ),
+        Application(
+            id="app-0012",
+            ref="DEMO-APP-0012",
+            institution_id="inst-01",
+            application_type="Extension of Approval (EoA)",
+            academic_year="2025-2026",
+            current_stage_id="stage-closed",
+            current_status="closed",
+            assigned_owner_id="usr-off-02",
+            submission_timestamp=now - timedelta(days=120),
+            due_date=now - timedelta(days=90),
+            created_at=now - timedelta(days=130),
+            updated_at=now - timedelta(days=80),
+        ),
+    ]
+    for app in applications:
+        session.add(app)
+
+    # 5. Seed Real Dummy Files and Document Records
+    # Minimal valid PDF payload
+    pdf_sample = b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /Resources <<>> /MediaBox [0 0 612 792] >>\nendobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \ntrailer\n<< /Size 4 /Root 1 0 R >>\nstartxref\n190\n%%EOF\n"
+    # Minimal 1x1 PNG payload
+    png_sample = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
+
+    file1 = create_sample_file(settings.storage_dir, "seed_land_deed.pdf", pdf_sample)
+    file2 = create_sample_file(settings.storage_dir, "seed_mandatory_disclosure.pdf", pdf_sample)
+    file3 = create_sample_file(settings.storage_dir, "seed_building_safety.pdf", pdf_sample)
+    file4 = create_sample_file(settings.storage_dir, "seed_campus_layout.png", png_sample)
+
+    documents = [
+        Document(
+            id="doc-0001",
+            application_id="app-0001",
+            original_filename="Land_Registration_Deed_2026.pdf",
+            storage_filename=file1,
+            mime_type="application/pdf",
+            file_size=len(pdf_sample),
+            uploaded_by_id="usr-inst-01",
+            uploaded_at=now - timedelta(days=5),
+            category="Land & Infrastructure",
+        ),
+        Document(
+            id="doc-0002",
+            application_id="app-0001",
+            original_filename="AICTE_Mandatory_Disclosure_2026.pdf",
+            storage_filename=file2,
+            mime_type="application/pdf",
+            file_size=len(pdf_sample),
+            uploaded_by_id="usr-inst-01",
+            uploaded_at=now - timedelta(days=5),
+            category="Institutional Disclosure",
+        ),
+        Document(
+            id="doc-0003",
+            application_id="app-0002",
+            original_filename="Building_Safety_Certificate.pdf",
+            storage_filename=file3,
+            mime_type="application/pdf",
+            file_size=len(pdf_sample),
+            uploaded_by_id="usr-inst-01",
+            uploaded_at=now - timedelta(days=18),
+            category="Safety Compliance",
+        ),
+        Document(
+            id="doc-0004",
+            application_id="app-0005",
+            original_filename="Campus_Layout_Plan_Approved.png",
+            storage_filename=file4,
+            mime_type="image/png",
+            file_size=len(png_sample),
+            uploaded_by_id="usr-inst-02",
+            uploaded_at=now - timedelta(days=2),
+            category="Architectural Blueprint",
+        ),
+    ]
+    for doc in documents:
+        session.add(doc)
+
+    # 6. Audit Events
+    audit_events = [
+        AuditEvent(
+            id="evt-0001",
+            actor_id="usr-inst-01",
+            actor_name="Dr. Ramesh Gupta",
+            actor_role="institution_user",
+            action="Application draft initiated",
+            entity_type="application",
+            entity_id="app-0001",
+            timestamp=now - timedelta(days=12),
+            detail='{"academic_year": "2026-2027", "type": "Extension of Approval (EoA)"}',
+        ),
+        AuditEvent(
+            id="evt-0002",
+            actor_id="usr-inst-01",
+            actor_name="Dr. Ramesh Gupta",
+            actor_role="institution_user",
+            action="Document uploaded",
+            entity_type="document",
+            entity_id="doc-0001",
+            timestamp=now - timedelta(days=5, hours=2),
+            detail='{"filename": "Land_Registration_Deed_2026.pdf", "category": "Land & Infrastructure"}',
+        ),
+        AuditEvent(
+            id="evt-0003",
+            actor_id="usr-inst-01",
+            actor_name="Dr. Ramesh Gupta",
+            actor_role="institution_user",
+            action="Application submitted for regulatory review",
+            entity_type="application",
+            entity_id="app-0001",
+            timestamp=now - timedelta(days=5),
+            detail='{"stage_entered": "stage-doc-check"}',
+        ),
+        AuditEvent(
+            id="evt-0004",
+            actor_id="usr-adm-01",
+            actor_name="Vikramaditya Nair",
+            actor_role="admin",
+            action="Assigned review officer",
+            entity_type="application",
+            entity_id="app-0001",
+            timestamp=now - timedelta(days=4),
+            detail='{"assigned_officer": "Priya Sharma"}',
+        ),
+    ]
+    for evt in audit_events:
+        session.add(evt)
+
+    session.commit()
