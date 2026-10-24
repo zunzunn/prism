@@ -169,6 +169,8 @@ PRISM is an AI-assisted regulatory workflow and compliance monitoring platform d
 21. `525f37d`: `Add workflow, assignment, clarification, and decision data models and schemas`
 22. `d07e176`: `Add workflow transitions, readiness assessment, assignments, clarification endpoints, and automated tests`
 23. `143dc04`: `Build dossier workflow action center, readiness inspector, clarifications, and stage transitions`
+24. `fa8249c`: `Update documentation and context for workflow automation engine`
+25. `9132e80`: `Move Six Calm Ledger Semantic Themes and preferences to Settings view`
 
 ---
 
