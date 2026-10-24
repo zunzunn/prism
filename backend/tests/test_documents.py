@@ -109,3 +109,29 @@ def test_download_nonexistent_document():
     token = get_token("officer")
     response = client.get("/api/documents/nonexistent-doc/file", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 404
+
+
+def test_download_document_with_query_param_token():
+    """Verify document download/preview succeeds using ?token= query parameter without Authorization header."""
+    token = get_token("institution_user")
+    pdf_content = b"%PDF-1.4 file for query param test"
+    files = {"file": ("query_test.pdf", io.BytesIO(pdf_content), "application/pdf")}
+    data = {"category": "Audited Report"}
+
+    upload_res = client.post(
+        "/api/applications/app-0001/documents",
+        files=files,
+        data=data,
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert upload_res.status_code == 200
+    doc_id = upload_res.json()["id"]
+
+    # Download with query param and NO Authorization header
+    dl_res = client.get(f"/api/documents/{doc_id}/file?token={token}")
+    assert dl_res.status_code == 200
+    assert dl_res.content == pdf_content
+
+    # Attempt download without token should fail 401
+    dl_unauth = client.get(f"/api/documents/{doc_id}/file")
+    assert dl_unauth.status_code == 401

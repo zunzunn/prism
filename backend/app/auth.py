@@ -6,7 +6,7 @@ import hmac
 import json
 import time
 from typing import Any, Optional
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.config import settings
 
@@ -105,16 +105,23 @@ def decode_session_token(token: str) -> dict[str, Any]:
 
 
 async def get_current_session(
+    request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> dict[str, Any]:
-    """Dependency that extracts and validates the bearer token."""
-    if not credentials or not credentials.credentials:
+    """Dependency that extracts and validates the session token from Authorization header or ?token= query parameter."""
+    token: Optional[str] = None
+    if credentials and credentials.credentials:
+        token = credentials.credentials
+    elif "token" in request.query_params and request.query_params["token"]:
+        token = request.query_params["token"]
+
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return decode_session_token(credentials.credentials)
+    return decode_session_token(token)
 
 
 def require_roles(*allowed_roles: str):
