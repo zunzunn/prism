@@ -12,8 +12,24 @@ engine = create_engine(
 
 
 def init_db() -> None:
-    """Create database tables if they do not exist."""
+    """Create database tables if they do not exist and apply lightweight schema migrations."""
     SQLModel.metadata.create_all(engine)
+    with engine.connect() as conn:
+        try:
+            cursor = conn.exec_driver_sql("PRAGMA table_info(stage_configs)")
+            cols = {row[1] for row in cursor.fetchall()}
+            if cols and "description" not in cols:
+                conn.exec_driver_sql("ALTER TABLE stage_configs ADD COLUMN description TEXT")
+            if cols and "responsible_role" not in cols:
+                conn.exec_driver_sql("ALTER TABLE stage_configs ADD COLUMN responsible_role TEXT DEFAULT 'officer'")
+            if cols and "requires_decision" not in cols:
+                conn.exec_driver_sql("ALTER TABLE stage_configs ADD COLUMN requires_decision BOOLEAN DEFAULT 0")
+            if cols and "allow_clarifications" not in cols:
+                conn.exec_driver_sql("ALTER TABLE stage_configs ADD COLUMN allow_clarifications BOOLEAN DEFAULT 1")
+            conn.commit()
+        except Exception:
+            pass
+
 
 
 def get_session() -> Generator[Session, None, None]:

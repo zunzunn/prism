@@ -37,8 +37,13 @@ class StageConfig(SQLModel, table=True):
     id: str = Field(primary_key=True)
     name: str
     order: int = Field(index=True)
+    description: Optional[str] = Field(default=None)
+    responsible_role: str = Field(default="officer")  # officer | admin | institution_user
+    requires_decision: bool = Field(default=False)
+    allow_clarifications: bool = Field(default=True)
     is_terminal: bool = Field(default=False)
     is_active: bool = Field(default=True)
+
 
 
 class Application(SQLModel, table=True):
@@ -191,4 +196,68 @@ class RuleEvaluation(SQLModel, table=True):
     evaluator_type: str = Field(default="deterministic")  # deterministic | manual_review
     error_detail: Optional[str] = Field(default=None)
     evaluated_at: datetime = Field(default_factory=utc_now)
+
+
+class AssignmentHistory(SQLModel, table=True):
+    __tablename__ = "assignment_history"
+
+    id: str = Field(primary_key=True)
+    application_id: str = Field(index=True)
+    assigned_by_id: str = Field(index=True)
+    assigned_by_name: str
+    previous_owner_id: Optional[str] = Field(default=None, index=True)
+    previous_owner_name: Optional[str] = Field(default=None)
+    new_owner_id: str = Field(index=True)
+    new_owner_name: str
+    reason: Optional[str] = Field(default=None)
+    assigned_at: datetime = Field(default_factory=utc_now)
+
+
+class ClarificationRequest(SQLModel, table=True):
+    __tablename__ = "clarification_requests"
+
+    id: str = Field(primary_key=True)
+    application_id: str = Field(index=True)
+    finding_id: Optional[str] = Field(default=None, index=True)
+    rule_code: Optional[str] = Field(default=None, index=True)
+    title: str
+    description: str
+    requested_by_id: str = Field(index=True)
+    requested_by_name: str
+    status: str = Field(default="open", index=True)  # open | responded | under_review | resolved | cancelled
+    due_date: Optional[datetime] = Field(default=None, index=True)
+    resolution_note: Optional[str] = Field(default=None)
+    resolved_by_id: Optional[str] = Field(default=None)
+    resolved_by_name: Optional[str] = Field(default=None)
+    resolved_at: Optional[datetime] = Field(default=None)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
+
+
+class ClarificationResponse(SQLModel, table=True):
+    __tablename__ = "clarification_responses"
+
+    id: str = Field(primary_key=True)
+    clarification_id: str = Field(index=True)
+    sender_id: str = Field(index=True)
+    sender_name: str
+    sender_role: str  # institution_user | officer | admin
+    message: str
+    document_id: Optional[str] = Field(default=None, index=True)
+    created_at: datetime = Field(default_factory=utc_now)
+
+
+class DecisionRecord(SQLModel, table=True):
+    __tablename__ = "decision_records"
+
+    id: str = Field(primary_key=True)
+    application_id: str = Field(index=True)
+    decided_by_id: str = Field(index=True)
+    decided_by_name: str
+    decision: str = Field(index=True)  # approved | rejected
+    decision_reason: str
+    conditions_or_remarks: Optional[str] = Field(default=None)
+    reference_findings_json: Optional[str] = Field(default=None)  # JSON list of finding IDs
+    decided_at: datetime = Field(default_factory=utc_now)
+
 

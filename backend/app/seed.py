@@ -7,8 +7,12 @@ from sqlmodel import Session, select
 from app.config import settings
 from app.models import (
     Application,
+    AssignmentHistory,
     AuditEvent,
+    ClarificationRequest,
+    ClarificationResponse,
     ComplianceObligation,
+    DecisionRecord,
     Document,
     DocumentExtraction,
     Finding,
@@ -18,6 +22,7 @@ from app.models import (
     StageConfig,
     User,
 )
+
 from app.services.rules_engine import RulesEngine
 from app.services.verification_pipeline import VerificationPipeline
 
@@ -62,6 +67,10 @@ def seed_database(session: Session, force: bool = False) -> None:
     if force:
         # Clean existing tables in dependency order
         for model in [
+            DecisionRecord,
+            ClarificationResponse,
+            ClarificationRequest,
+            AssignmentHistory,
             RuleEvaluation,
             ComplianceObligation,
             RegulatoryRule,
@@ -78,6 +87,7 @@ def seed_database(session: Session, force: bool = False) -> None:
             for r in records:
                 session.delete(r)
         session.commit()
+
 
 
     now = datetime.now(timezone.utc)
@@ -162,15 +172,88 @@ def seed_database(session: Session, force: bool = False) -> None:
 
     # 3. Stage Configurations (Standard 8 regulatory approval stages)
     stages = [
-        StageConfig(id="stage-draft", name="Draft", order=1, is_terminal=False),
-        StageConfig(id="stage-submitted", name="Submitted", order=2, is_terminal=False),
-        StageConfig(id="stage-doc-check", name="Document check", order=3, is_terminal=False),
-        StageConfig(id="stage-desk-review", name="Desk review", order=4, is_terminal=False),
-        StageConfig(id="stage-clarification", name="Clarification", order=5, is_terminal=False),
-        StageConfig(id="stage-committee", name="Committee review", order=6, is_terminal=False),
-        StageConfig(id="stage-decision", name="Decision pending", order=7, is_terminal=False),
-        StageConfig(id="stage-closed", name="Closed", order=8, is_terminal=True),
+        StageConfig(
+            id="stage-draft",
+            name="Draft",
+            order=1,
+            description="Application initiation and preliminary document collation by applicant institution",
+            responsible_role="institution_user",
+            requires_decision=False,
+            allow_clarifications=False,
+            is_terminal=False,
+        ),
+        StageConfig(
+            id="stage-submitted",
+            name="Submitted",
+            order=2,
+            description="Formal intake and intake queue processing upon institutional filing",
+            responsible_role="officer",
+            requires_decision=False,
+            allow_clarifications=False,
+            is_terminal=False,
+        ),
+        StageConfig(
+            id="stage-doc-check",
+            name="Document check",
+            order=3,
+            description="Primary scrutiny of mandatory statutory clearances, registrations, and formats",
+            responsible_role="officer",
+            requires_decision=False,
+            allow_clarifications=True,
+            is_terminal=False,
+        ),
+        StageConfig(
+            id="stage-desk-review",
+            name="Desk review",
+            order=4,
+            description="In-depth evaluation of evidence against APH compliance rules and institutional norms",
+            responsible_role="officer",
+            requires_decision=False,
+            allow_clarifications=True,
+            is_terminal=False,
+        ),
+        StageConfig(
+            id="stage-clarification",
+            name="Clarification",
+            order=5,
+            description="Interlocutory clarification exchange between scrutiny officers and institution",
+            responsible_role="officer",
+            requires_decision=False,
+            allow_clarifications=True,
+            is_terminal=False,
+        ),
+        StageConfig(
+            id="stage-committee",
+            name="Committee review",
+            order=6,
+            description="Scrutiny committee assessment and recommendation synthesis",
+            responsible_role="officer",
+            requires_decision=False,
+            allow_clarifications=True,
+            is_terminal=False,
+        ),
+        StageConfig(
+            id="stage-decision",
+            name="Decision pending",
+            order=7,
+            description="Final regulatory disposition pending authoritative officer sign-off",
+            responsible_role="officer",
+            requires_decision=True,
+            allow_clarifications=False,
+            is_terminal=False,
+        ),
+        StageConfig(
+            id="stage-closed",
+            name="Closed",
+            order=8,
+            description="Concluded approval cycle with immutable statutory determination record",
+            responsible_role="officer",
+            requires_decision=False,
+            allow_clarifications=False,
+            is_terminal=True,
+        ),
     ]
+
     for stage in stages:
         session.add(stage)
 
@@ -533,4 +616,88 @@ def seed_database(session: Session, force: bool = False) -> None:
             actor=officer_user,
             db=session,
         )
+
+    # 9. Seed Workflow Automation Entities (Assignments, Clarifications, Decisions)
+    # Assignment history for app-0001
+
+    assign_01 = AssignmentHistory(
+        id="asgn-0001",
+        application_id=applications[0].id,
+        assigned_by_id=users[4].id,  # Vikramaditya Nair (admin)
+        assigned_by_name=users[4].display_name,
+        previous_owner_id=None,
+        previous_owner_name=None,
+        new_owner_id=users[2].id,  # Priya Sharma (officer)
+        new_owner_name=users[2].display_name,
+        reason="Initial application intake and primary scrutiny allocation",
+        assigned_at=now - timedelta(days=4),
+    )
+    session.add(assign_01)
+
+    # Clarification for app-0002 (Building Safety expiry)
+    clr_01 = ClarificationRequest(
+        id="clr-0001",
+        application_id=applications[1].id,
+        finding_id=None,
+        rule_code="RULE-SAFE-01",
+        title="Clarification on Expired Fire & Structural Safety Certificate",
+        description=(
+            "The submitted Building_Safety_Certificate.pdf (STR-CERT-2023-110) expired on 15 Jan 2024. "
+            "Please submit a currently valid Structural Stability Certificate issued by the Municipal Fire & Safety Directorate "
+            "covering the 2026-2027 academic cycle."
+        ),
+        requested_by_id=users[2].id,
+        requested_by_name=users[2].display_name,
+        status="open",
+        due_date=now + timedelta(days=5),
+        created_at=now - timedelta(days=3),
+        updated_at=now - timedelta(days=3),
+    )
+    session.add(clr_01)
+
+    # Clarification for app-0011 (Responded by institution)
+    clr_02 = ClarificationRequest(
+        id="clr-0002",
+        application_id=applications[10].id,
+        finding_id=None,
+        rule_code="RULE-AFFI-01",
+        title="Discrepancy in Faculty Roster and AICTE Pay Scales",
+        description="Please provide attested Form 16 statements and board approval resolutions for newly appointed faculty in the Mechanical Engineering department.",
+        requested_by_id=users[2].id,
+        requested_by_name=users[2].display_name,
+        status="responded",
+        due_date=now + timedelta(days=2),
+        created_at=now - timedelta(days=4),
+        updated_at=now - timedelta(days=1),
+    )
+    session.add(clr_02)
+
+    resp_01 = ClarificationResponse(
+        id="clr-resp-0001",
+        clarification_id=clr_02.id,
+        sender_id=users[0].id,  # Dr. Ramesh Gupta
+        sender_name=users[0].display_name,
+        sender_role="institution_user",
+        message="We have collated the attested Form 16 statements and governing body resolutions. The verified documents confirm 7th CPC compliance.",
+        document_id=None,
+        created_at=now - timedelta(days=1),
+    )
+    session.add(resp_01)
+
+    # Authorized decision record for app-0012 (Closed application)
+    dec_01 = DecisionRecord(
+        id="dec-0001",
+        application_id=applications[11].id,
+        decided_by_id=users[3].id,  # Rajesh Verma
+        decided_by_name=users[3].display_name,
+        decision="approved",
+        decision_reason="All statutory clearances, land deeds, and municipal approvals verified compliant under AICTE APH 2025-2026 guidelines.",
+        conditions_or_remarks="Annual compliance report to be submitted by 30 June 2026.",
+        reference_findings_json="[]",
+        decided_at=now - timedelta(days=80),
+    )
+    session.add(dec_01)
+
+    session.commit()
+
 
