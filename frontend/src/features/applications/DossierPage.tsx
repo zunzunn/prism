@@ -19,6 +19,7 @@ import {
   Scale,
   Search,
   SlidersHorizontal,
+  Plus,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,19 +29,22 @@ import { DocumentExtractionDrawer } from '@/components/DocumentExtractionDrawer'
 import { ComplianceCard } from '@/features/compliance/ComplianceCard';
 import { ComplianceSummaryCards } from '@/features/compliance/ComplianceSummaryCards';
 import { ComplianceAuditHistory } from '@/features/compliance/ComplianceAuditHistory';
+import { ClarificationThread } from '@/features/clarifications/ClarificationThread';
+import { ClarificationRequestModal } from '@/features/clarifications/ClarificationRequestModal';
+import { WorkflowActionCenter } from '@/features/workflow/WorkflowActionCenter';
 import { useAuth } from '@/features/auth/useAuth';
 import { apiClient } from '@/lib/api';
 import { formatDateIST, formatDateTimeIST, formatRelativeDays } from '@/lib/dates';
 import {
   ApplicationComplianceResponse,
   ApplicationDetailResponse,
+  ClarificationRequestRead,
   DocumentRead,
   FindingRead,
   FindingReviewResponse,
   ObligationReviewResponse,
   RuleEvaluationRead,
   StageConfigRead,
-
   VerificationRunResponse,
 } from '@/types';
 import { cn } from '@/lib/utils';
@@ -52,7 +56,7 @@ export const DossierPage: React.FC = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'summary' | 'documents' | 'findings' | 'compliance' | 'history'>('summary');
+  const [activeTab, setActiveTab] = useState<'summary' | 'documents' | 'findings' | 'compliance' | 'clarifications' | 'history'>('summary');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [documentCategory, setDocumentCategory] = useState('Land & Infrastructure');
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -61,6 +65,11 @@ export const DossierPage: React.FC = () => {
   const [inspectingDoc, setInspectingDoc] = useState<DocumentRead | null>(null);
   const [verifyingDocId, setVerifyingDocId] = useState<string | null>(null);
   const [clarificationNotice, setClarificationNotice] = useState<string | null>(null);
+
+  // Clarifications State
+  const [isNewClarificationOpen, setIsNewClarificationOpen] = useState(false);
+  const [preselectedFindingId, setPreselectedFindingId] = useState<string | null>(null);
+  const [clarificationStatusFilter, setClarificationStatusFilter] = useState<string>('all');
 
   // Finding Filters
   const [reviewFilter, setReviewFilter] = useState<'all' | 'needs_review' | 'confirmed' | 'dismissed'>('all');
@@ -79,6 +88,13 @@ export const DossierPage: React.FC = () => {
     queryKey: ['application-detail', id],
     queryFn: () => apiClient<ApplicationDetailResponse>(`/api/applications/${id}`),
     retry: 1,
+  });
+
+  // Fetch clarifications
+  const { data: clarifications = [] } = useQuery<ClarificationRequestRead[]>({
+    queryKey: ['clarifications', id],
+    queryFn: () => apiClient<ClarificationRequestRead[]>(`/api/applications/${id}/clarifications`),
+    enabled: !!id,
   });
 
   // Fetch compliance status and obligations
@@ -278,9 +294,8 @@ export const DossierPage: React.FC = () => {
   };
 
   const handleRequestClarification = (finding: FindingRead) => {
-    setClarificationNotice(
-      `Clarification thread initiated for "${finding.title}". (Clarifications module configured for full workflow in next phase).`
-    );
+    setPreselectedFindingId(finding.id);
+    setIsNewClarificationOpen(true);
   };
 
   if (isLoading) {
@@ -333,6 +348,9 @@ export const DossierPage: React.FC = () => {
   const needsReviewCount = findings.filter((f) => f.review_state === 'needs_review').length;
   const confirmedCount = findings.filter((f) => f.review_state === 'confirmed').length;
   const dismissedCount = findings.filter((f) => f.review_state === 'dismissed').length;
+  const openClarificationsCount = clarifications.filter(
+    (c) => c.status === 'open' || c.status === 'responded' || c.status === 'under_review'
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -352,6 +370,12 @@ export const DossierPage: React.FC = () => {
             <span className="text-xs font-medium text-warning bg-warning-soft px-2.5 py-1 rounded-full border border-warning/20 flex items-center gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5" />
               {needsReviewCount} {needsReviewCount === 1 ? 'Finding' : 'Findings'} Need Human Review
+            </span>
+          )}
+          {openClarificationsCount > 0 && (
+            <span className="text-xs font-medium text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 flex items-center gap-1.5">
+              <MessageSquare className="w-3.5 h-3.5" />
+              {openClarificationsCount} Active {openClarificationsCount === 1 ? 'Clarification' : 'Clarifications'}
             </span>
           )}
           <StatusBadge statusKey={application.status} />
@@ -447,6 +471,20 @@ export const DossierPage: React.FC = () => {
         </div>
       </Card>
 
+      {/* Workflow Action Center: Stage Readiness, Blocker Inspector, and Progression Actions */}
+      <WorkflowActionCenter
+        applicationId={application.id}
+        currentStageId={application.stage_id}
+        currentStageName={application.stage_name}
+        assignedOwnerId={application.owner_id}
+        assignedOwnerName={application.owner_name}
+        stages={stages}
+        findings={findings}
+        documents={documents}
+        currentUserRole={user?.role}
+        isTerminal={stages[currentStageIndex]?.is_terminal ?? false}
+      />
+
       {/* Clarification temporary banner */}
       {clarificationNotice && (
         <div className="p-3 rounded-lg bg-info-soft border border-info/20 text-info text-xs flex items-center justify-between">
@@ -540,6 +578,32 @@ export const DossierPage: React.FC = () => {
               )}
             >
               {complianceData.summary.total_obligations}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('clarifications')}
+          className={cn(
+            'pb-2.5 transition-colors relative flex items-center gap-1.5',
+            activeTab === 'clarifications'
+              ? 'text-accent border-b-2 border-accent font-semibold'
+              : 'text-text-muted hover:text-text'
+          )}
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          <span>Clarifications</span>
+          {clarifications.length > 0 && (
+            <span
+              className={cn(
+                'px-1.5 py-0.2 rounded-full border text-[10px] font-mono',
+                clarifications.some((c) => c.status === 'open' || c.status === 'responded')
+                  ? 'bg-amber-500/10 text-amber-500 border-amber-500/30 font-bold'
+                  : 'bg-surface-2 border-border text-text-muted'
+              )}
+            >
+              {clarifications.length}
             </span>
           )}
         </button>
@@ -1195,7 +1259,105 @@ export const DossierPage: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 4: Audit History */}
+      {/* Tab 5: Interlocutory Clarification Threads */}
+      {activeTab === 'clarifications' && (
+        <div className="space-y-6">
+          {/* Header & Filter Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface p-4 rounded-xl border border-border">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-accent" />
+                <h3 className="text-sm font-semibold text-text">
+                  Interlocutory Clarification Threads
+                </h3>
+              </div>
+              <p className="text-xs text-text-muted">
+                Formal regulatory inquiries between scrutiny officers and the applicant institution.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {/* Status Filter */}
+              <div className="flex items-center gap-1.5 text-xs">
+                <span className="text-text-muted font-medium">Status:</span>
+                <select
+                  value={clarificationStatusFilter}
+                  onChange={(e) => setClarificationStatusFilter(e.target.value)}
+                  className="h-8 px-2.5 rounded-md bg-surface-2 border border-border text-xs text-text focus:outline-none focus:ring-1 focus:ring-accent"
+                >
+                  <option value="all">All ({clarifications.length})</option>
+                  <option value="open">Open / Awaiting Reply</option>
+                  <option value="responded">Responded</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              {(user?.role === 'officer' || user?.role === 'admin') && (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setPreselectedFindingId(null);
+                    setIsNewClarificationOpen(true);
+                  }}
+                  className="prism-gradient-bg text-white text-xs h-8 gap-1.5 shadow-sm"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  New Clarification
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Clarification List */}
+          {(() => {
+            const filteredClarifications = clarifications.filter((c) => {
+              if (clarificationStatusFilter === 'all') return true;
+              if (clarificationStatusFilter === 'open') return c.status === 'open';
+              if (clarificationStatusFilter === 'responded')
+                return c.status === 'responded' || c.status === 'under_review';
+              return c.status === clarificationStatusFilter;
+            });
+
+            if (filteredClarifications.length === 0) {
+              return (
+                <Card className="p-10 text-center space-y-3 border-dashed">
+                  <MessageSquare className="w-8 h-8 text-text-muted mx-auto" />
+                  <h3 className="text-sm font-semibold text-text">
+                    {clarifications.length === 0
+                      ? 'No Clarification Requests'
+                      : 'No Matching Clarifications'}
+                  </h3>
+                  <p className="text-xs text-text-muted max-w-md mx-auto">
+                    {clarifications.length === 0
+                      ? 'No procedural clarification inquiries have been raised for this regulatory application.'
+                      : 'No clarification threads match the selected status filter.'}
+                  </p>
+                </Card>
+              );
+            }
+
+            return (
+              <div className="space-y-4">
+                {filteredClarifications.map((clr) => (
+                  <ClarificationThread
+                    key={clr.id}
+                    clarification={clr}
+                    currentUserRole={user?.role}
+                    applicationDocuments={documents}
+                    onDocumentClick={(docId) => {
+                      const doc = documents.find((d) => d.id === docId);
+                      if (doc) setPreviewDoc(doc);
+                    }}
+                  />
+                ))}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* Tab 6: Audit History */}
       {activeTab === 'history' && (
 
         <Card>
@@ -1307,6 +1469,18 @@ export const DossierPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Clarification Request Modal */}
+      <ClarificationRequestModal
+        applicationId={application.id}
+        findings={findings}
+        preselectedFindingId={preselectedFindingId}
+        isOpen={isNewClarificationOpen}
+        onClose={() => {
+          setIsNewClarificationOpen(false);
+          setPreselectedFindingId(null);
+        }}
+      />
     </div>
   );
 };

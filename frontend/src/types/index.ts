@@ -54,7 +54,12 @@ export interface StageConfigRead {
   id: string;
   name: string;
   order: number;
+  description?: string;
+  responsible_role?: string;
+  requires_decision?: boolean;
+  allow_clarifications?: boolean;
   is_terminal: boolean;
+  is_active?: boolean;
 }
 
 export interface DocumentRead {
@@ -252,4 +257,151 @@ export interface ObligationReviewResponse {
   obligation: ComplianceObligationRead;
   message: string;
 }
+
+export interface OfficerSummary {
+  id: string;
+  display_name: string;
+  email: string;
+  role: string;
+  active_assignments_count: number;
+}
+
+export interface AssignmentHistoryRead {
+  id: string;
+  application_id: string;
+  assigned_by_id: string;
+  assigned_by_name: string;
+  previous_owner_id?: string | null;
+  previous_owner_name?: string | null;
+  new_owner_id: string;
+  new_owner_name: string;
+  reason?: string | null;
+  assigned_at: string;
+}
+
+export interface AssignmentRequest {
+  owner_id: string;
+  reason?: string | null;
+}
+
+export interface ClarificationResponseRead {
+  id: string;
+  clarification_id: string;
+  sender_id: string;
+  sender_name: string;
+  sender_role: string;
+  message: string;
+  document_id?: string | null;
+  document_name?: string | null;
+  created_at: string;
+}
+
+export interface ClarificationRequestRead {
+  id: string;
+  application_id: string;
+  finding_id?: string | null;
+  finding_title?: string | null;
+  rule_code?: string | null;
+  title: string;
+  description: string;
+  requested_by_id: string;
+  requested_by_name: string;
+  status: 'open' | 'responded' | 'under_review' | 'resolved' | 'cancelled';
+  due_date?: string | null;
+  resolution_note?: string | null;
+  resolved_by_id?: string | null;
+  resolved_by_name?: string | null;
+  resolved_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  responses: ClarificationResponseRead[];
+}
+
+export interface ClarificationCreateRequest {
+  title: string;
+  description: string;
+  finding_id?: string | null;
+  rule_code?: string | null;
+  due_date?: string | null;
+}
+
+export interface ClarificationResponseCreateRequest {
+  message: string;
+  document_id?: string | null;
+}
+
+export interface ClarificationResolveRequest {
+  resolution_note: string;
+}
+
+export interface ClarificationCancelRequest {
+  reason?: string | null;
+}
+
+export interface ReadinessBlocker {
+  code: string;
+  title: string;
+  severity: 'high' | 'medium' | 'low';
+  category: 'document' | 'finding' | 'compliance' | 'clarification' | 'assignment' | 'decision';
+  description: string;
+  source_entity?: string | null;
+  entity_id?: string | null;
+}
+
+export interface StageReadinessResponse {
+  application_id: string;
+  is_ready: boolean;
+  current_stage_id: string;
+  current_stage_name: string;
+  target_stage_id?: string | null;
+  target_stage_name?: string | null;
+  blockers: ReadinessBlocker[];
+  total_blockers: number;
+  can_admin_override: boolean;
+  assessed_at: string;
+}
+
+export interface StageTransitionRequest {
+  target_stage_id?: string | null;
+  note?: string | null;
+  override_blockers?: boolean;
+  override_reason?: string | null;
+}
+
+export interface StageReturnRequest {
+  target_stage_id: string;
+  return_reason: string;
+}
+
+export interface StageTransitionResponse {
+  application_id: string;
+  previous_stage_id: string;
+  previous_stage_name: string;
+  new_stage_id: string;
+  new_stage_name: string;
+  status: string;
+  message: string;
+}
+
+export interface DecisionRecordRequest {
+  decision: 'approved' | 'rejected';
+  reason: string;
+  conditions_or_remarks?: string | null;
+  reference_finding_ids?: string[];
+  override_blockers?: boolean;
+  override_reason?: string | null;
+}
+
+export interface DecisionRecordRead {
+  id: string;
+  application_id: string;
+  decided_by_id: string;
+  decided_by_name: string;
+  decision: 'approved' | 'rejected';
+  decision_reason: string;
+  conditions_or_remarks?: string | null;
+  reference_findings: string[];
+  decided_at: string;
+}
+
 
