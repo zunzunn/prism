@@ -389,6 +389,7 @@ class ReadinessBlocker(BaseModel):
 
 
 class StageReadinessResponse(BaseModel):
+    application_id: str
     is_ready: bool
     current_stage_id: str
     current_stage_name: str

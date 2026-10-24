@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session
 from app.config import settings
 from app.db import engine, init_db
-from app.routers import applications, auth, compliance, demo, documents, health, verification
+from app.routers import applications, auth, clarifications, compliance, demo, documents, health, verification, workflow
 from app.seed import seed_database
 
 
@@ -48,6 +48,8 @@ app.include_router(applications.router, prefix="/api")
 app.include_router(documents.router, prefix="/api")
 app.include_router(verification.router, prefix="/api")
 app.include_router(compliance.router, prefix="/api")
+app.include_router(workflow.router, prefix="/api")
+app.include_router(clarifications.router, prefix="/api")
 
 
 
