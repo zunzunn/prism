@@ -30,19 +30,22 @@ prism/
 │   │   ├── config.py         # Application settings (secret keys, storage, db)
 │   │   ├── db.py             # SQLite engine and session generator
 │   │   ├── auth.py           # HMAC-SHA256 session token management & RBAC
-│   │   ├── models.py         # SQLModel entities (User, Application, Document, Finding, Extraction)
+│   │   ├── models.py         # SQLModel entities (User, Application, Document, Finding, Extraction, Rules, Obligations)
 │   │   ├── schemas.py        # Pydantic request/response schemas
 │   │   ├── seed.py           # Deterministic & idempotent sample data generator
-│   │   ├── services/         # Decoupled verification services
+│   │   ├── services/         # Decoupled verification & compliance services
 │   │   │   ├── document_processor.py # PyMuPDF text & page layout extraction
 │   │   │   ├── field_extractor.py   # Deterministic structured entity extraction
-│   │   │   └── verification_pipeline.py # Deterministic regulatory cross-checks
+│   │   │   ├── verification_pipeline.py # Deterministic document-level cross-checks
+│   │   │   ├── rules_registry.py    # Authoritative AICTE APH citations & rules
+│   │   │   └── rules_engine.py      # Deterministic compliance obligations engine
 │   │   └── routers/
 │   │       ├── health.py     # Health check & system status
 │   │       ├── auth.py       # One-click demo login, session restore, logout
 │   │       ├── applications.py # Application listing, filtering, search & dossier
 │   │       ├── documents.py  # File upload validation, storage, and preview
 │   │       ├── verification.py # Document verification, extraction, and finding review
+│   │       ├── compliance.py # Compliance obligations, evaluations, and review
 │   │       └── demo.py       # Demo reset control endpoint
 │   ├── storage/uploads/      # Local file storage for uploaded documents
 │   └── tests/
@@ -52,7 +55,9 @@ prism/
 │       ├── test_seed.py      # Persistence and idempotency tests
 │       ├── test_applications.py # Role access and application listing tests
 │       ├── test_documents.py # Upload validation and secure download tests
-│       └── test_verification.py # PyMuPDF extraction, checks, and review tests
+│       ├── test_verification.py # PyMuPDF extraction, checks, and review tests
+│       └── test_rules_engine.py # Compliance checks, citations, versions, and overrides
+
 └── frontend/                 # React + TypeScript Vite frontend
     ├── package.json          # Frontend dependencies & npm scripts
     ├── vite.config.ts        # Vite configuration & backend proxy

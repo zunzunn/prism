@@ -117,6 +117,75 @@ PRISM is an AI-assisted regulatory workflow and compliance monitoring platform d
 1. `174edc2`: `Initialize project repository and add design specification`
 2. `552ee28`: `Set up backend foundation with FastAPI, health router, and tests`
 3. `ef3d579`: `Add design tokens, six themes, and automated WCAG contrast test suite`
+### Phase 4: Regulatory Compliance Rules Engine (Completed)
+- **Authoritative Regulatory Rules Registry (`backend/app/services/rules_registry.py`)**:
+  - Authoritative citations directly referencing official AICTE Approval Process Handbook (APH 2024–2027) chapters, clauses, and procedural norms:
+    - `RULE-LAND-01` (v1.0 & v2.0): Land Title & Ownership Consistency (APH 2024–2027 Ch. II Cl. 2.1).
+    - `RULE-SAFE-01` (v1.0): Structural Stability & Fire Safety Certification (APH 2024–2027 Ch. II Cl. 2.4).
+    - `RULE-DISC-01` (v1.0): Mandatory Institutional Public Disclosure (APH 2024–2027 Ch. VII Cl. 7.2).
+    - `RULE-AFFI-01` (v1.0): Anti-Ragging & Faculty Pay Undertaking Affidavit (APH 2024–2027 Ch. II Cl. 2.8 & 2.9).
+    - `RULE-DATE-01` (v1.0): Statutory Clearance Issuance Pre-dating Application (APH 2024–2027 Ch. I Procedural Guidelines).
+    - `RULE-BUILD-01` (v1.0): Approved Campus Layout & Architectural Plan (APH 2024–2027 Ch. II Cl. 2.3).
+    - `DEMO-RULE-SPEC-01` (v1.0): Smart Campus Solar Energy & Water Audit (*Explicitly tagged as Synthetic Demonstration Rule, not official AICTE mandate*).
+  - Version resolution: engine determines the active rule version effective at the application submission date/cycle (demonstrated with v1.0 and v2.0 for `RULE-LAND-01`).
+- **Data Models (`backend/app/models.py`)**:
+  - `RegulatoryRule`: versioned regulatory requirements, criteria configuration, severity, mandatory review flag, source handbook citations, effectivity dates.
+  - `ComplianceObligation`: application-level compliance obligations with distinct evaluation statuses, due dates, review statuses, and notes.
+  - `RuleEvaluation`: immutable, explainable evaluation audit records with batch IDs, expected vs actual values, document references, page numbers, and verbatim evidence snippets.
+- **Deterministic Rules Engine (`backend/app/services/rules_engine.py`)**:
+  - Decoupled from HTTP routes, pure deterministic logic without arbitrary Python code execution.
+  - Check types: `required_document_presence`, `required_field_presence`, `certificate_expiry`, `date_order_validity`, `extracted_vs_record_match`, and `mandatory_human_review`.
+  - Non-fabricated statuses: `satisfied`, `not_satisfied`, `pending_evidence`, `needs_review`, `unable_to_evaluate`, `not_applicable`, `exception_granted`.
+  - Automatic `AuditEvent` logging upon every evaluation execution.
+  - Authorized officer review override workflow with accountability notes and audit trail preservation.
+- **Compliance API Router (`backend/app/routers/compliance.py`)**:
+  - `GET /api/rules`: Lists regulatory rules with category and synthetic filters.
+  - `GET /api/rules/{rule_code}/versions`: Lists all historical and upcoming versions of a rule.
+  - `GET /api/applications/{application_id}/compliance`: Retrieves obligations, summary metrics, and latest evaluations.
+  - `POST /api/applications/{application_id}/compliance/evaluate`: Executes deterministic re-evaluation on-demand.
+  - `GET /api/applications/{application_id}/compliance/history`: Retrieves full evaluation audit trail.
+  - `POST /api/compliance/obligations/{obligation_id}/review`: Records authorized officer/admin review decisions and overrides with RBAC enforcement (officers/admins only; institution users receive 403 Forbidden).
+- **Frontend Dossier Compliance UI (`frontend/src/features/compliance/`)**:
+  - **Compliance Tab in Dossier (`DossierPage.tsx`)**:
+    - Header indicator showing total obligations and attention items.
+    - Executive status cards (`ComplianceSummaryCards.tsx`) displaying exact counts for Satisfied, Needs Review, Pending Evidence, Not Satisfied, and Unable to Evaluate (strictly avoiding fabricated single percentages).
+    - Interactive filters (Status chips, Category dropdown, text search).
+    - View switcher between "Requirements" and "Audit Trail" views.
+  - **ComplianceCard Component (`ComplianceCard.tsx`)**:
+    - AICTE Handbook citation badge vs Synthetic Demonstration badge.
+    - Severity and mandatory officer review indicators.
+    - Explainability box with expected condition, actual extracted evidence, verbatim snippet, and document link.
+    - Review state badge (`unreviewed`, `confirmed`, `overridden`).
+    - Officer actions: Quick "Confirm Status" or "Record Review Decision / Override" with form for decision selection (`satisfied`, `not_satisfied`, `exception_granted`) and mandatory review rationale.
+  - **ComplianceAuditHistory Component (`ComplianceAuditHistory.tsx`)**:
+    - Chronological log of automated checks and officer review overrides.
+  - **Mandatory AICTE Governance Disclaimer**:
+    - *"Regulatory compliance assessments are evidence-based deterministic evaluations under AICTE Approval Process Handbook (APH 2024–2027) guidelines. The rules engine does not automatically grant or deny institutional approval; all final statutory determinations rest with authorized scrutiny officers."*
+
+---
+
+## 3. Test Coverage & Verification
+
+- **Backend**: **49 automated tests** (`pytest`) passing with 100% success rate:
+  - `test_rules_engine.py`: 12 tests covering default rules, citations, version resolution, deterministic checks (expiry, name match, post-dating, missing evidence, unreadable docs), officer review overrides, audit logging, API endpoints, and cross-institution isolation.
+  - `test_verification.py`: 9 tests covering document processing and verification.
+  - `test_applications.py`, `test_documents.py`, `test_auth.py`, `test_seed.py`, `test_health.py`: 28 tests.
+- **Frontend**: **36 automated unit tests** (`vitest`) passing:
+  - Contrast accessibility tests (all 30 pairs passing AA/AAA).
+  - Auth token and session restore tests.
+  - Finding state and severity tests.
+  - Compliance status governance and non-fabrication tests (`compliance.test.ts`).
+- **Type Safety & Linting**:
+  - `npm run typecheck` → **0 errors**
+  - `npm run lint` → **0 errors, 0 warnings**
+  - `npm run build` → **Production bundle builds cleanly** (Vite in 1.50s).
+
+---
+
+## 4. Git Commit History
+1. `89b33a5`: `Initialize repository with foundation structure and .gitignore`
+2. `ef26756`: `Configure design tokens, themes, and automated contrast verification`
+3. `a9da84f`: `Initialize FastAPI application with health check and CORS`
 4. `7680ee4`: `Create application shell layout, routing, and foundation verification view`
 5. `b4d631e`: `Add project documentation with architecture overview and startup instructions`
 6. `f3048c5`: `Add persistent demo authentication for institution users, officers, and administrators`
@@ -127,6 +196,10 @@ PRISM is an AI-assisted regulatory workflow and compliance monitoring platform d
 11. `b3a47b5`: `Implement secure document uploads with validation, local storage, and preview endpoints`
 12. `9a5f14c`: `Finalize Phase 2 integration, test suite, and setup documentation`
 13. `bf932e1`: `Implement document verification pipeline, deterministic checks, and findings API`
+14. `69c8558`: `Integrate findings review interface, document extraction drawer, and test suite`
+15. `cc1d4d9`: `Update documentation and context for Phase 3 Document Verification Engine`
+16. `fe66c10`: `Implement Phase 4 Regulatory Compliance Rules Engine backend, seed rules, and tests`
+17. `bfa5353`: `Implement Phase 4 Regulatory Compliance UI tab, obligation cards, and evaluation metrics in Application Dossier`
 
 ---
 
@@ -149,7 +222,8 @@ npm run dev
 
 ---
 
-## 6. Next Phase: Phase 4 (Clarifications, Deadlines & Alerts)
-- Officer "Request Clarification" workflow linked to findings.
-- Institution user clarification replies with file attachments.
-- Escalation engine, deadlines calendar & priority alerts queue.
+## 6. Next Steps: Subsequent Phases
+- Clarification thread messaging directly between review officers and institutions.
+- Multi-channel notification, escalation rules, and deadline warning banners.
+- Committee review management and final statutory disposition issuance.
+
