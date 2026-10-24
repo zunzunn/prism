@@ -6,6 +6,7 @@ import { ListPage } from '@/features/applications/ListPage';
 import { DossierPage } from '@/features/applications/DossierPage';
 import { FoundationReadinessPage } from '@/features/foundation/FoundationReadinessPage';
 import { PlaceholderPage } from '@/features/foundation/PlaceholderPage';
+import { SettingsPage } from '@/features/settings/SettingsPage';
 
 export const router = createBrowserRouter([
   {
@@ -84,13 +85,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'settings',
-        element: (
-          <PlaceholderPage
-            title="Settings & Preferences"
-            phaseScheduled="Phase 4"
-            description="Theme selector, motion toggle, due-soon window configuration, and demo reset."
-          />
-        ),
+        element: <SettingsPage />,
       },
       {
         path: '*',

@@ -1,11 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, Server, Layers, Sliders, Check } from 'lucide-react';
+import { CheckCircle2, Server, Layers, Sliders, Palette } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { apiClient } from '@/lib/api';
-import { THEMES, Theme, applyTheme, getInitialTheme } from '@/lib/theme';
 import { applyReduceMotion, getInitialReduceMotion } from '@/lib/motion';
 
 interface HealthResponse {
@@ -15,7 +15,7 @@ interface HealthResponse {
 }
 
 export const FoundationReadinessPage: React.FC = () => {
-  const [activeTheme, setActiveTheme] = React.useState<Theme>(getInitialTheme);
+  const navigate = useNavigate();
   const [reduceMotion, setReduceMotion] = React.useState<boolean>(getInitialReduceMotion);
 
   // Live backend health query
@@ -24,11 +24,6 @@ export const FoundationReadinessPage: React.FC = () => {
     queryFn: () => apiClient<HealthResponse>('/api/health'),
     retry: 1,
   });
-
-  const handleThemeChange = (newTheme: Theme) => {
-    setActiveTheme(newTheme);
-    applyTheme(newTheme);
-  };
 
   const handleToggleMotion = () => {
     const next = !reduceMotion;
@@ -54,7 +49,7 @@ export const FoundationReadinessPage: React.FC = () => {
           <Button
             variant="primary"
             size="sm"
-            onClick={() => window.location.href = '/applications'}
+            onClick={() => navigate('/applications')}
           >
             Go to Applications
           </Button>
@@ -140,53 +135,31 @@ export const FoundationReadinessPage: React.FC = () => {
         </Card>
       </div>
 
-      {/* Theme Matrix Section */}
-      <Card>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+      {/* Six Calm Ledger Semantic Themes Section (Configured in Settings) */}
+      <Card className="p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-sm font-semibold text-text">Six Calm Ledger Semantic Themes</h2>
-            <p className="text-xs text-text-muted mt-0.5">
-              Click any theme below to preview instant crossfade token switching and persistence.
+            <div className="flex items-center gap-2">
+              <Palette className="w-4 h-4 text-accent" />
+              <h2 className="text-sm font-semibold text-text">Six Calm Ledger Semantic Themes</h2>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">
+                WCAG 2.2 AA / AAA
+              </span>
+            </div>
+            <p className="text-xs text-text-muted mt-1 max-w-2xl">
+              The 6 Calm Ledger semantic themes (Daylight, Dusk, Void, Paper, Contrast Light, and Contrast Dark), motion toggles, and display accessibility controls are now centralized in Settings.
             </p>
           </div>
-          <div className="text-xs font-mono text-text-muted">
-            Active: <span className="text-accent font-semibold">{activeTheme}</span>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {THEMES.map((theme) => {
-            const isSelected = activeTheme === theme.id;
-            return (
-              <button
-                key={theme.id}
-                type="button"
-                onClick={() => handleThemeChange(theme.id)}
-                className={`p-3 rounded-md border text-left transition-all relative ${
-                  isSelected
-                    ? 'border-accent ring-1 ring-accent bg-surface-2'
-                    : 'border-border bg-surface hover:bg-surface-2'
-                }`}
-              >
-                <div
-                  className="w-full h-8 rounded mb-2 border border-border flex items-center justify-end px-2"
-                  style={{ backgroundColor: theme.previewBg }}
-                >
-                  <div
-                    className="w-3.5 h-3.5 rounded-full"
-                    style={{ backgroundColor: theme.previewAccent }}
-                  />
-                </div>
-                <div className="font-medium text-xs text-text truncate">{theme.label}</div>
-                <div className="text-[10px] text-text-muted truncate">{theme.category}</div>
-                {isSelected && (
-                  <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-accent text-accent-fg flex items-center justify-center">
-                    <Check className="w-2.5 h-2.5" />
-                  </div>
-                )}
-              </button>
-            );
-          })}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => navigate('/settings')}
+            className="shrink-0 text-xs gap-1.5"
+          >
+            <Palette className="w-3.5 h-3.5" />
+            <span>Manage Themes in Settings</span>
+          </Button>
         </div>
       </Card>
     </div>
