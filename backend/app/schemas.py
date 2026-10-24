@@ -174,3 +174,101 @@ class ApplicationDetailResponse(BaseModel):
     documents: list[DocumentRead]
     audit_events: list[AuditEventRead]
     findings: list[FindingRead] = []
+
+
+class RegulatoryRuleRead(BaseModel):
+    id: str
+    rule_code: str
+    version: str
+    title: str
+    description: str
+    category: str
+    applicable_types: list[str] = []
+    evaluation_type: str
+    severity: str
+    mandatory_review: bool
+    source_document: str
+    source_section: str
+    effective_from: datetime
+    effective_until: Optional[datetime] = None
+    is_synthetic: bool = False
+    is_active: bool = True
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RuleEvaluationRead(BaseModel):
+    id: str
+    application_id: str
+    obligation_id: Optional[str] = None
+    rule_code: str
+    rule_version: str
+    evaluation_batch_id: str
+    status: str
+    explanation: str
+    expected_value: Optional[str] = None
+    actual_value: Optional[str] = None
+    evidence_document_id: Optional[str] = None
+    evidence_document_name: Optional[str] = None
+    evidence_page: Optional[int] = None
+    evidence_snippet: Optional[str] = None
+    evaluator_type: str
+    error_detail: Optional[str] = None
+    evaluated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ComplianceObligationRead(BaseModel):
+    id: str
+    application_id: str
+    rule_code: str
+    rule_version: str
+    title: str
+    category: str
+    severity: str
+    status: str
+    due_date: Optional[datetime] = None
+    last_evaluated_at: Optional[datetime] = None
+    review_status: str
+    review_decision: Optional[str] = None
+    reviewed_by_id: Optional[str] = None
+    reviewed_by_name: Optional[str] = None
+    reviewed_at: Optional[datetime] = None
+    review_notes: Optional[str] = None
+    rule_details: Optional[RegulatoryRuleRead] = None
+    latest_evaluation: Optional[RuleEvaluationRead] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ComplianceSummaryRead(BaseModel):
+    total_obligations: int
+    satisfied_count: int
+    pending_evidence_count: int
+    needs_review_count: int
+    not_satisfied_count: int
+    unable_to_evaluate_count: int
+    not_applicable_count: int
+    last_evaluated_at: Optional[datetime] = None
+
+
+class ApplicationComplianceResponse(BaseModel):
+    application_id: str
+    application_ref: str
+    academic_year: str
+    summary: ComplianceSummaryRead
+    obligations: list[ComplianceObligationRead]
+
+
+class ObligationReviewRequest(BaseModel):
+    review_status: str  # "confirmed" | "overridden"
+    decision: Optional[str] = None  # "satisfied" | "not_satisfied" | "exception_granted"
+    notes: str
+
+
+class ObligationReviewResponse(BaseModel):
+    obligation: ComplianceObligationRead
+    message: str
+

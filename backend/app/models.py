@@ -123,3 +123,72 @@ class AuditEvent(SQLModel, table=True):
     entity_id: str = Field(index=True)
     timestamp: datetime = Field(default_factory=utc_now)
     detail: Optional[str] = Field(default=None)  # JSON string
+
+
+class RegulatoryRule(SQLModel, table=True):
+    __tablename__ = "regulatory_rules"
+
+    id: str = Field(primary_key=True)
+    rule_code: str = Field(index=True)  # e.g. RULE-LAND-01
+    version: str = Field(default="1.0", index=True)
+    title: str
+    description: str
+    category: str = Field(index=True)  # Land & Infrastructure, Safety & Statutory, etc.
+    applicable_types_json: str = Field(default='["*"]')  # JSON list of application types
+    evaluation_type: str = Field(index=True)  # document_presence, field_presence, certificate_expiry, date_order_validity, extracted_vs_record_match, mandatory_human_review, evidence_freshness
+    check_config_json: str = Field(default="{}")  # JSON dict parameters for deterministic check
+    severity: str = Field(default="high", index=True)  # high | medium | low
+    mandatory_review: bool = Field(default=False)
+    source_document: str = Field(default="AICTE Approval Process Handbook (APH 2024–2027)")
+    source_section: str
+    effective_from: datetime = Field(default_factory=utc_now)
+    effective_until: Optional[datetime] = Field(default=None)
+    is_synthetic: bool = Field(default=False)  # True if synthetic demonstration rule
+    is_active: bool = Field(default=True, index=True)
+    created_at: datetime = Field(default_factory=utc_now)
+
+
+class ComplianceObligation(SQLModel, table=True):
+    __tablename__ = "compliance_obligations"
+
+    id: str = Field(primary_key=True)
+    application_id: str = Field(index=True)
+    rule_code: str = Field(index=True)
+    rule_version: str = Field(default="1.0")
+    title: str
+    category: str
+    severity: str = Field(default="high")
+    status: str = Field(default="pending_evidence", index=True)  # satisfied | not_satisfied | pending_evidence | needs_review | unable_to_evaluate | not_applicable
+    due_date: Optional[datetime] = Field(default=None, index=True)
+    last_evaluated_at: Optional[datetime] = Field(default=None)
+    review_status: str = Field(default="unreviewed", index=True)  # unreviewed | confirmed | overridden
+    review_decision: Optional[str] = Field(default=None)  # satisfied | not_satisfied | exception_granted
+    reviewed_by_id: Optional[str] = Field(default=None)
+    reviewed_by_name: Optional[str] = Field(default=None)
+    reviewed_at: Optional[datetime] = Field(default=None)
+    review_notes: Optional[str] = Field(default=None)
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
+
+
+class RuleEvaluation(SQLModel, table=True):
+    __tablename__ = "rule_evaluations"
+
+    id: str = Field(primary_key=True)
+    application_id: str = Field(index=True)
+    obligation_id: Optional[str] = Field(default=None, index=True)
+    rule_code: str = Field(index=True)
+    rule_version: str = Field(default="1.0")
+    evaluation_batch_id: str = Field(index=True)
+    status: str = Field(index=True)  # satisfied | not_satisfied | pending_evidence | needs_review | unable_to_evaluate | not_applicable
+    explanation: str
+    expected_value: Optional[str] = Field(default=None)
+    actual_value: Optional[str] = Field(default=None)
+    evidence_document_id: Optional[str] = Field(default=None, index=True)
+    evidence_document_name: Optional[str] = Field(default=None)
+    evidence_page: Optional[int] = Field(default=None)
+    evidence_snippet: Optional[str] = Field(default=None)
+    evaluator_type: str = Field(default="deterministic")  # deterministic | manual_review
+    error_detail: Optional[str] = Field(default=None)
+    evaluated_at: datetime = Field(default_factory=utc_now)
+

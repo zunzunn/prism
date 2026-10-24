@@ -5,8 +5,22 @@ from pathlib import Path
 import pymupdf as fitz
 from sqlmodel import Session, select
 from app.config import settings
-from app.models import Application, AuditEvent, Document, DocumentExtraction, Finding, Institution, StageConfig, User
+from app.models import (
+    Application,
+    AuditEvent,
+    ComplianceObligation,
+    Document,
+    DocumentExtraction,
+    Finding,
+    Institution,
+    RegulatoryRule,
+    RuleEvaluation,
+    StageConfig,
+    User,
+)
+from app.services.rules_engine import RulesEngine
 from app.services.verification_pipeline import VerificationPipeline
+
 
 
 def create_sample_file(storage_dir: Path, filename: str, content: bytes, overwrite: bool = False) -> str:
@@ -35,33 +49,36 @@ def seed_database(session: Session, force: bool = False) -> None:
     """Seed the database with realistic, deterministic sample data."""
     existing_stage = session.exec(select(StageConfig)).first()
     if existing_stage and not force:
-        # Check if verification results already seeded
-        existing_ext = session.exec(select(DocumentExtraction)).first()
-        if not existing_ext:
-            # Populate extractions for existing seeded docs
-            docs = session.exec(select(Document)).all()
+        # Check if rules and obligations already seeded
+        RulesEngine.ensure_default_rules(session)
+        existing_oblg = session.exec(select(ComplianceObligation)).first()
+        if not existing_oblg:
             user_off = session.exec(select(User).where(User.role == "officer")).first()
-            if user_off and docs:
-                for d in docs:
-                    app = session.get(Application, d.application_id)
-                    inst = session.get(Institution, app.institution_id) if app else None
-                    if app and inst:
-                        VerificationPipeline.process_document(
-                            document=d,
-                            application=app,
-                            institution=inst,
-                            actor=user_off,
-                            db=session,
-                        )
+            apps = session.exec(select(Application)).all()
+            for app in apps[:3]:
+                RulesEngine.evaluate_application(app, session, user_off, trigger="seed_init")
         return
 
     if force:
         # Clean existing tables in dependency order
-        for model in [AuditEvent, Finding, DocumentExtraction, Document, Application, StageConfig, User, Institution]:
+        for model in [
+            RuleEvaluation,
+            ComplianceObligation,
+            RegulatoryRule,
+            AuditEvent,
+            Finding,
+            DocumentExtraction,
+            Document,
+            Application,
+            StageConfig,
+            User,
+            Institution,
+        ]:
             records = session.exec(select(model)).all()
             for r in records:
                 session.delete(r)
         session.commit()
+
 
     now = datetime.now(timezone.utc)
 
@@ -494,3 +511,26 @@ def seed_database(session: Session, force: bool = False) -> None:
             actor=officer_user,
             db=session,
         )
+
+    # 8. Seed regulatory rules and run deterministic compliance evaluation
+    RulesEngine.ensure_default_rules(session)
+    for app in [applications[0], applications[1], applications[4]]:
+        RulesEngine.evaluate_application(
+            application=app,
+            db=session,
+            actor=officer_user,
+            trigger="seed_init",
+        )
+
+    # Seed one confirmed review on app-0001 for demonstration
+    oblg_affi = session.get(ComplianceObligation, f"oblg_{applications[0].id}_RULE-AFFI-01")
+    if oblg_affi:
+        RulesEngine.record_obligation_review(
+            obligation=oblg_affi,
+            review_status="confirmed",
+            decision="satisfied",
+            notes="Affidavit on non-judicial stamp paper verified against AICTE Model Format. Notary registration valid.",
+            actor=officer_user,
+            db=session,
+        )
+
