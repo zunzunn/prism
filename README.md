@@ -149,15 +149,72 @@ Run the verification suite across both projects:
 cd frontend
 npm run typecheck    # TypeScript compiler check (0 errors)
 npm run lint         # ESLint check (0 errors, 0 warnings)
-npm run test         # Vitest test suite (40 tests passing: WCAG contrast, auth, compliance, workflow)
+npm run test         # Vitest test suite (49 tests passing: WCAG contrast, auth, compliance, workflow, API URL resolver)
 npm run build        # Production bundle build (clean Vite build, zero errors)
 ```
 
 ### Backend
 ```bash
 cd backend
-uv run pytest        # Pytest test suite (59 tests passing: auth, seed, applications, documents, verification, compliance, workflow)
+uv run pytest        # Pytest test suite (62 tests passing: health, CORS origins, auth, seed, applications, documents, verification, compliance, workflow)
 ```
+
+---
+
+## Deployment Guide: Vercel Frontend & Render Backend
+
+PRISM is architected for decoupled deployment with the React frontend hosted on **Vercel** and the FastAPI backend service hosted on **Render**.
+
+### 1. Render Backend Web Service Configuration
+
+1. Create a new **Web Service** on Render connected to this repository.
+2. Configure settings:
+   - **Root Directory**: `backend`
+   - **Runtime**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+3. Add **Environment Variables** in Render Dashboard:
+   | Variable | Value | Purpose |
+   |---|---|---|
+   | `CORS_ORIGINS` | `https://<your-vercel-app>.vercel.app,http://localhost:5173` | Allowed frontend origins (trailing slashes stripped automatically; wildcard `*` excluded for secure credentialed auth) |
+   | `DATABASE_URL` | `sqlite:///./prism.db` | Database connection string (or PostgreSQL URL) |
+   | `STORAGE_DIR` | `./storage/uploads` | Document storage directory |
+   | `SECRET_KEY` | `<secure-random-32-byte-hex>` | Secret key for signing session tokens |
+   | `SESSION_EXPIRY_HOURS` | `24` | Token validity duration |
+   | `DEBUG` | `false` | Production error masking |
+
+4. Verify health endpoint:
+   ```bash
+   curl https://<your-render-service>.onrender.com/api/health
+   ```
+   Expected response:
+   ```json
+   {
+     "status": "ok",
+     "app": "PRISM API",
+     "version": "0.2.0",
+     "database": "connected"
+   }
+   ```
+   *(If database connectivity fails, returns HTTP `503 Service Unavailable` with `status: "degraded"` without exposing database credentials or file paths).*
+
+### 2. Vercel Frontend Deployment Configuration
+
+1. Import the repository into **Vercel**.
+2. Configure project settings:
+   - **Framework Preset**: `Vite`
+   - **Root Directory**: `frontend`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `dist`
+   - **Install Command**: `npm install`
+3. Add **Environment Variables** in Vercel Project Settings:
+   | Variable | Value | Purpose |
+   |---|---|---|
+   | `VITE_API_URL` | `https://<your-render-service>.onrender.com` | Base URL of deployed Render backend service |
+
+   > **Note:** Do NOT include a trailing slash in `VITE_API_URL`. PRISM's `getApiUrl()` helper automatically normalizes and strips trailing slashes, but omitting it ensures standard URL construction.
+
+4. Deploy the frontend. All API requests (`/api/me`, `/api/applications`, `/api/compliance`, `/api/documents`, etc.) will route to the Render backend, while document previews and downloads include the authenticated session token query parameter for seamless viewing.
 
 ---
 
@@ -181,3 +238,4 @@ npm run dev
 ```
 - Web Application: `http://localhost:5173`
 - Default redirect to `/signin` with instant demo persona selection.
+- In local development, leaving `VITE_API_URL` empty automatically proxies `/api` requests to `http://127.0.0.1:8000` via Vite.

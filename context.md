@@ -171,10 +171,33 @@ PRISM is an AI-assisted regulatory workflow and compliance monitoring platform d
 23. `143dc04`: `Build dossier workflow action center, readiness inspector, clarifications, and stage transitions`
 24. `fa8249c`: `Update documentation and context for workflow automation engine`
 25. `9132e80`: `Move Six Calm Ledger Semantic Themes and preferences to Settings view`
+26. `6cbb188`: `Configure robust CORS origin parsing, database health probe, and query auth for files`
+27. `89d014c`: `Centralize API URL resolution and update document asset links`
 
 ---
 
-## 6. How to Run Locally
+## 6. Vercel & Render Integration Architecture
+
+- **Backend CORS Handling (`backend/app/config.py`)**:
+  - `parse_cors_origins()` strips whitespace and trailing slashes from `CORS_ORIGINS`.
+  - Filters out wildcard `*` to ensure compatibility with credentialed authentication (`allow_credentials=True`).
+  - Preserves local origins (`http://localhost:5173`, `http://127.0.0.1:5173`, `http://localhost:3000`) alongside production origins.
+- **Backend Health Check (`backend/app/routers/health.py`)**:
+  - Live probe executing `SELECT 1` against the database.
+  - Distinguishes healthy status (`"database": "connected"`, HTTP 200) from degraded status (`"database": "disconnected"`, HTTP 503).
+  - Shields sensitive connection strings, file paths, and stack traces.
+- **Frontend URL Resolution (`frontend/src/lib/api.ts`)**:
+  - Centralized `getBaseApiUrl()`, `getApiUrl()`, and `getAuthenticatedDocumentUrl()`.
+  - Eliminates duplicate slashes and missing slashes regardless of trailing slashes in `VITE_API_URL`.
+  - Emits console warnings in production builds if `VITE_API_URL` is omitted.
+  - Generates signed token query URLs for direct document download, image tags, and PDF iframe previews.
+- **Cross-Origin Authentication**:
+  - Bearer token stored in `localStorage` under `prism.auth_token`.
+  - Injected into all `fetch` requests as `Authorization: Bearer <token>`.
+
+---
+
+## 7. How to Run Locally
 
 ### Start Backend
 ```bash
@@ -190,3 +213,4 @@ cd frontend
 npm run dev
 ```
 - Web Application: `http://localhost:5173`
+- In local development, leaving `VITE_API_URL` empty automatically proxies `/api` requests to `http://127.0.0.1:8000` via Vite.
