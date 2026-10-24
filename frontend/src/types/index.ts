@@ -150,3 +150,106 @@ export interface ApplicationDetailResponse {
   audit_events: AuditEventRead[];
   findings?: FindingRead[];
 }
+
+export type ObligationStatus =
+  | 'satisfied'
+  | 'not_satisfied'
+  | 'pending_evidence'
+  | 'needs_review'
+  | 'unable_to_evaluate'
+  | 'not_applicable'
+  | 'exception_granted';
+
+export type ReviewStatus = 'unreviewed' | 'confirmed' | 'overridden';
+
+export interface RegulatoryRuleRead {
+  id: string;
+  rule_code: string;
+  version: string;
+  title: string;
+  description: string;
+  category: string;
+  applicable_types: string[];
+  evaluation_type: string;
+  severity: 'high' | 'medium' | 'low';
+  mandatory_review: boolean;
+  source_document: string;
+  source_section: string;
+  effective_from: string;
+  effective_until?: string | null;
+  is_synthetic: boolean;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface RuleEvaluationRead {
+  id: string;
+  application_id: string;
+  obligation_id?: string | null;
+  rule_code: string;
+  rule_version: string;
+  evaluation_batch_id: string;
+  status: ObligationStatus;
+  explanation: string;
+  expected_value?: string | null;
+  actual_value?: string | null;
+  evidence_document_id?: string | null;
+  evidence_document_name?: string | null;
+  evidence_page?: number | null;
+  evidence_snippet?: string | null;
+  evaluator_type: 'deterministic' | 'manual_review';
+  error_detail?: string | null;
+  evaluated_at: string;
+}
+
+export interface ComplianceObligationRead {
+  id: string;
+  application_id: string;
+  rule_code: string;
+  rule_version: string;
+  title: string;
+  category: string;
+  severity: 'high' | 'medium' | 'low';
+  status: ObligationStatus;
+  due_date?: string | null;
+  last_evaluated_at?: string | null;
+  review_status: ReviewStatus;
+  review_decision?: string | null;
+  reviewed_by_id?: string | null;
+  reviewed_by_name?: string | null;
+  reviewed_at?: string | null;
+  review_notes?: string | null;
+  rule_details?: RegulatoryRuleRead | null;
+  latest_evaluation?: RuleEvaluationRead | null;
+}
+
+export interface ComplianceSummaryRead {
+  total_obligations: number;
+  satisfied_count: number;
+  pending_evidence_count: number;
+  needs_review_count: number;
+  not_satisfied_count: number;
+  unable_to_evaluate_count: number;
+  not_applicable_count: number;
+  last_evaluated_at?: string | null;
+}
+
+export interface ApplicationComplianceResponse {
+  application_id: string;
+  application_ref: string;
+  academic_year: string;
+  summary: ComplianceSummaryRead;
+  obligations: ComplianceObligationRead[];
+}
+
+export interface ObligationReviewRequest {
+  review_status: 'confirmed' | 'overridden';
+  decision?: 'satisfied' | 'not_satisfied' | 'exception_granted';
+  notes: string;
+}
+
+export interface ObligationReviewResponse {
+  obligation: ComplianceObligationRead;
+  message: string;
+}
+

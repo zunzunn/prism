@@ -16,24 +16,35 @@ import {
   Layers,
   Filter,
   MessageSquare,
+  Scale,
+  Search,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { FindingCard } from '@/components/FindingCard';
 import { DocumentExtractionDrawer } from '@/components/DocumentExtractionDrawer';
+import { ComplianceCard } from '@/features/compliance/ComplianceCard';
+import { ComplianceSummaryCards } from '@/features/compliance/ComplianceSummaryCards';
+import { ComplianceAuditHistory } from '@/features/compliance/ComplianceAuditHistory';
 import { useAuth } from '@/features/auth/useAuth';
 import { apiClient } from '@/lib/api';
 import { formatDateIST, formatDateTimeIST, formatRelativeDays } from '@/lib/dates';
 import {
+  ApplicationComplianceResponse,
   ApplicationDetailResponse,
   DocumentRead,
   FindingRead,
   FindingReviewResponse,
+  ObligationReviewResponse,
+  RuleEvaluationRead,
   StageConfigRead,
+
   VerificationRunResponse,
 } from '@/types';
 import { cn } from '@/lib/utils';
+
 
 export const DossierPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -41,7 +52,7 @@ export const DossierPage: React.FC = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'summary' | 'documents' | 'findings' | 'history'>('summary');
+  const [activeTab, setActiveTab] = useState<'summary' | 'documents' | 'findings' | 'compliance' | 'history'>('summary');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [documentCategory, setDocumentCategory] = useState('Land & Infrastructure');
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -55,6 +66,12 @@ export const DossierPage: React.FC = () => {
   const [reviewFilter, setReviewFilter] = useState<'all' | 'needs_review' | 'confirmed' | 'dismissed'>('all');
   const [severityFilter, setSeverityFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
 
+  // Compliance Filters & View State
+  const [complianceStatusFilter, setComplianceStatusFilter] = useState<string>('all');
+  const [complianceCategoryFilter, setComplianceCategoryFilter] = useState<string>('all');
+  const [complianceSearch, setComplianceSearch] = useState<string>('');
+  const [showComplianceHistory, setShowComplianceHistory] = useState<boolean>(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch full application dossier
@@ -63,6 +80,73 @@ export const DossierPage: React.FC = () => {
     queryFn: () => apiClient<ApplicationDetailResponse>(`/api/applications/${id}`),
     retry: 1,
   });
+
+  // Fetch compliance status and obligations
+  const {
+    data: complianceData,
+    isLoading: isComplianceLoading,
+  } = useQuery<ApplicationComplianceResponse>({
+    queryKey: ['application-compliance', id],
+    queryFn: () => apiClient<ApplicationComplianceResponse>(`/api/applications/${id}/compliance`),
+    enabled: !!id,
+  });
+
+  // Fetch compliance history evaluations
+  const { data: complianceHistory = [] } = useQuery<RuleEvaluationRead[]>({
+    queryKey: ['compliance-history', id],
+    queryFn: () => apiClient<RuleEvaluationRead[]>(`/api/applications/${id}/compliance/history`),
+    enabled: !!id && activeTab === 'compliance',
+  });
+
+  // Compliance re-evaluate mutation
+  const evaluateComplianceMutation = useMutation({
+    mutationFn: async () => {
+      return apiClient<ApplicationComplianceResponse>(`/api/applications/${id}/compliance/evaluate`, {
+        method: 'POST',
+      });
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['application-compliance', id] });
+      queryClient.invalidateQueries({ queryKey: ['compliance-history', id] });
+      queryClient.invalidateQueries({ queryKey: ['application-detail', id] });
+      setUploadSuccess(`Compliance evaluation complete. Satisfied: ${res.summary.satisfied_count}, Needs Review: ${res.summary.needs_review_count}, Pending: ${res.summary.pending_evidence_count}`);
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : 'Evaluation failed';
+      setUploadError(msg);
+    },
+  });
+
+  // Obligation review mutation
+  const obligationReviewMutation = useMutation({
+    mutationFn: async ({
+      obligationId,
+      reviewStatus,
+      decision,
+      notes,
+    }: {
+      obligationId: string;
+      reviewStatus: 'confirmed' | 'overridden';
+      decision?: 'satisfied' | 'not_satisfied' | 'exception_granted';
+      notes?: string;
+    }) => {
+      return apiClient<ObligationReviewResponse>(`/api/compliance/obligations/${obligationId}/review`, {
+        method: 'POST',
+        body: JSON.stringify({ review_status: reviewStatus, decision, notes: notes || '' }),
+      });
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['application-compliance', id] });
+      queryClient.invalidateQueries({ queryKey: ['compliance-history', id] });
+      queryClient.invalidateQueries({ queryKey: ['application-detail', id] });
+      setUploadSuccess(`Requirement ${res.obligation.rule_code} marked as ${res.obligation.review_status}.`);
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : 'Review action failed';
+      setUploadError(msg);
+    },
+  });
+
 
   // Verify document mutation
   const verifyMutation = useMutation({
@@ -436,6 +520,32 @@ export const DossierPage: React.FC = () => {
 
         <button
           type="button"
+          onClick={() => setActiveTab('compliance')}
+          className={cn(
+            'pb-2.5 transition-colors relative flex items-center gap-1.5',
+            activeTab === 'compliance'
+              ? 'text-accent border-b-2 border-accent font-semibold'
+              : 'text-text-muted hover:text-text'
+          )}
+        >
+          <Scale className="w-3.5 h-3.5" />
+          <span>Regulatory Compliance</span>
+          {complianceData?.summary && (
+            <span
+              className={cn(
+                'px-1.5 py-0.2 rounded-full border text-[10px] font-mono',
+                complianceData.summary.needs_review_count > 0 || complianceData.summary.not_satisfied_count > 0
+                  ? 'bg-warning-soft text-warning border-warning/30 font-bold'
+                  : 'bg-surface-2 border-border text-text-muted'
+              )}
+            >
+              {complianceData.summary.total_obligations}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab('history')}
           className={cn(
             'pb-2.5 transition-colors relative flex items-center gap-1.5',
@@ -449,6 +559,7 @@ export const DossierPage: React.FC = () => {
             {audit_events.length}
           </span>
         </button>
+
       </div>
 
       {/* Tab 1: Summary */}
@@ -882,8 +993,211 @@ export const DossierPage: React.FC = () => {
         </div>
       )}
 
+      {/* Tab: Regulatory Compliance & Rules Engine */}
+      {activeTab === 'compliance' && (
+        <div className="space-y-6">
+          {isComplianceLoading && !complianceData ? (
+            <div className="p-12 text-center space-y-3">
+              <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
+              <span className="text-xs text-text-muted font-medium">Evaluating regulatory compliance obligations...</span>
+            </div>
+          ) : !complianceData ? (
+            <Card className="p-8 text-center text-xs text-text-muted space-y-3">
+              <Scale className="w-8 h-8 text-text-muted mx-auto" />
+              <p>No compliance requirements could be loaded for this application.</p>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => evaluateComplianceMutation.mutate()}
+                disabled={evaluateComplianceMutation.isPending}
+                className="text-xs"
+              >
+                Initialize Compliance Evaluation
+              </Button>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              {/* Executive Status Metric Cards */}
+              <ComplianceSummaryCards
+                summary={complianceData.summary}
+                selectedFilter={complianceStatusFilter}
+                onSelectFilter={setComplianceStatusFilter}
+                onReevaluate={() => evaluateComplianceMutation.mutate()}
+                isEvaluating={evaluateComplianceMutation.isPending}
+              />
+
+              {/* Filter, Search & View Switcher Toolbar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface p-4 rounded-xl border border-border">
+                {/* Search Input */}
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="w-3.5 h-3.5 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={complianceSearch}
+                    onChange={(e) => setComplianceSearch(e.target.value)}
+                    placeholder="Search by rule code, title, or requirement..."
+                    className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-surface-2 border border-border text-xs text-text placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                  {complianceSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setComplianceSearch('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 flex-wrap">
+                  {/* Category Filter Dropdown */}
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <span className="text-text-muted font-medium flex items-center gap-1">
+                      <SlidersHorizontal className="w-3 h-3" /> Category:
+                    </span>
+                    <select
+                      value={complianceCategoryFilter}
+                      onChange={(e) => setComplianceCategoryFilter(e.target.value)}
+                      className="text-xs p-1.5 rounded bg-surface-2 border border-border text-text focus:outline-none focus:ring-1 focus:ring-accent"
+                    >
+                      <option value="all">All Categories</option>
+                      <option value="Land & Infrastructure">Land & Infrastructure</option>
+                      <option value="Safety & Statutory">Safety & Statutory</option>
+                      <option value="Transparency & Disclosures">Transparency & Disclosures</option>
+                      <option value="Faculty & Governance">Faculty & Governance</option>
+                      <option value="Statutory Timing">Statutory Timing</option>
+                      <option value="Green Campus Initiatives">Green Campus Initiatives</option>
+                    </select>
+                  </div>
+
+                  {/* Toggle View: Requirements vs Audit History */}
+                  <div className="flex items-center rounded-lg border border-border bg-surface-2 p-0.5 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setShowComplianceHistory(false)}
+                      className={cn(
+                        'px-2.5 py-1 rounded-md transition-colors font-medium',
+                        !showComplianceHistory
+                          ? 'bg-surface text-text shadow-xs'
+                          : 'text-text-muted hover:text-text'
+                      )}
+                    >
+                      Requirements ({complianceData.obligations.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowComplianceHistory(true)}
+                      className={cn(
+                        'px-2.5 py-1 rounded-md transition-colors font-medium',
+                        showComplianceHistory
+                          ? 'bg-surface text-text shadow-xs'
+                          : 'text-text-muted hover:text-text'
+                      )}
+                    >
+                      Audit Trail ({complianceHistory.length})
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* View: Audit Trail */}
+              {showComplianceHistory ? (
+                <ComplianceAuditHistory
+                  evaluations={complianceHistory}
+                  onInspectDocument={handleInspectDocument}
+                />
+              ) : (
+                /* View: Requirements Cards List */
+                <div className="space-y-4">
+                  {(() => {
+                    const filteredObligations = complianceData.obligations.filter((oblg) => {
+                      // Status filter
+                      if (complianceStatusFilter !== 'all' && oblg.status !== complianceStatusFilter) {
+                        return false;
+                      }
+                      // Category filter
+                      if (complianceCategoryFilter !== 'all' && oblg.category !== complianceCategoryFilter) {
+                        return false;
+                      }
+                      // Search filter
+                      if (complianceSearch.trim()) {
+                        const q = complianceSearch.toLowerCase();
+                        const matchCode = oblg.rule_code.toLowerCase().includes(q);
+                        const matchTitle = oblg.title.toLowerCase().includes(q);
+                        const matchDesc = oblg.rule_details?.description?.toLowerCase().includes(q);
+                        if (!matchCode && !matchTitle && !matchDesc) return false;
+                      }
+                      return true;
+                    });
+
+                    if (filteredObligations.length === 0) {
+                      return (
+                        <Card className="p-8 text-center text-xs text-text-muted space-y-2">
+                          <CheckCircle2 className="w-8 h-8 text-text-muted mx-auto" />
+                          <p>No regulatory obligations match the selected criteria.</p>
+                          {(complianceStatusFilter !== 'all' || complianceCategoryFilter !== 'all' || complianceSearch) && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setComplianceStatusFilter('all');
+                                setComplianceCategoryFilter('all');
+                                setComplianceSearch('');
+                              }}
+                              className="text-xs"
+                            >
+                              Reset Filters
+                            </Button>
+                          )}
+                        </Card>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-4">
+                        {filteredObligations.map((oblg) => (
+                          <ComplianceCard
+                            key={oblg.id}
+                            obligation={oblg}
+                            userRole={user?.role}
+                            onReview={async (obligationId, reviewStatus, decision, notes) => {
+                              await obligationReviewMutation.mutateAsync({
+                                obligationId,
+                                reviewStatus,
+                                decision,
+                                notes,
+                              });
+                            }}
+                            onInspectDocument={handleInspectDocument}
+                            isReviewing={obligationReviewMutation.isPending}
+                          />
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* Mandatory AICTE Regulatory Disclaimer Footer */}
+              <div className="p-4 rounded-lg bg-surface-2/60 border border-border/80 text-center space-y-1">
+                <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-text">
+                  <Scale className="w-3.5 h-3.5 text-accent" />
+                  <span>Authoritative AICTE Regulatory Standards Governance</span>
+                </div>
+                <p className="text-xs text-text-muted italic max-w-3xl mx-auto leading-relaxed">
+                  "Regulatory compliance assessments are evidence-based deterministic evaluations under AICTE Approval Process Handbook (APH 2024–2027) guidelines. The rules engine does not automatically grant or deny institutional approval; all final statutory determinations rest with authorized scrutiny officers."
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Tab 4: Audit History */}
       {activeTab === 'history' && (
+
         <Card>
           <h2 className="text-xs font-semibold text-text uppercase tracking-wider mb-4 border-b border-border pb-2">
             Chronological Audit Log ({audit_events.length} recorded events)
