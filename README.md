@@ -10,7 +10,7 @@ PRISM is an AI-assisted regulatory workflow and compliance monitoring platform d
 
 * **Frontend**: React 18, TypeScript (Strict), Vite, Tailwind CSS, TanStack Query, Radix UI primitives, Lucide React, and Motion.
 * **Design System**: Calm Ledger aesthetic with six semantic themes (`daylight`, `dusk`, `void`, `paper`, `contrast-light`, `contrast-dark`) passing WCAG 2.2 AA / AAA contrast requirements.
-* **Backend**: FastAPI, Python 3.12, Uvicorn, Pydantic, SQLModel, and SQLite.
+* **Backend**: FastAPI, Python 3.12/3.13, Uvicorn, Pydantic, SQLModel, and SQLite.
 * **Storage**: Secure local document storage in `backend/storage/uploads/`.
 * **Authentication**: Cryptographically signed HMAC-SHA256 session tokens with role-based access enforcement.
 
@@ -21,6 +21,7 @@ PRISM is an AI-assisted regulatory workflow and compliance monitoring platform d
 ```
 prism/
 ├── design.md                 # Primary design & architecture specification
+├── context.md                # Detailed implementation progress & phase history
 ├── .env.example              # Environment variable template
 ├── backend/                  # FastAPI service
 │   ├── pyproject.toml        # Backend dependencies & metadata
@@ -30,55 +31,63 @@ prism/
 │   │   ├── config.py         # Application settings (secret keys, storage, db)
 │   │   ├── db.py             # SQLite engine and session generator
 │   │   ├── auth.py           # HMAC-SHA256 session token management & RBAC
-│   │   ├── models.py         # SQLModel entities (User, Application, Document, Finding, Extraction, Rules, Obligations)
+│   │   ├── models.py         # SQLModel entities (User, Application, Document, Finding, Extraction, Rules, Obligations, StageConfig, AssignmentHistory, ClarificationRequest, ClarificationResponse, DecisionRecord)
 │   │   ├── schemas.py        # Pydantic request/response schemas
 │   │   ├── seed.py           # Deterministic & idempotent sample data generator
-│   │   ├── services/         # Decoupled verification & compliance services
-│   │   │   ├── document_processor.py # PyMuPDF text & page layout extraction
-│   │   │   ├── field_extractor.py   # Deterministic structured entity extraction
+│   │   ├── services/         # Decoupled verification, compliance, and workflow services
+│   │   │   ├── document_processor.py   # PyMuPDF text & page layout extraction
+│   │   │   ├── field_extractor.py     # Deterministic structured entity extraction
 │   │   │   ├── verification_pipeline.py # Deterministic document-level cross-checks
-│   │   │   ├── rules_registry.py    # Authoritative AICTE APH citations & rules
-│   │   │   └── rules_engine.py      # Deterministic compliance obligations engine
+│   │   │   ├── rules_registry.py      # Authoritative AICTE APH citations & rules
+│   │   │   ├── rules_engine.py        # Deterministic compliance obligations engine
+│   │   │   ├── workflow_engine.py     # Stage progression, readiness blockers, assignments, decisions
+│   │   │   └── clarification_service.py # Clarification threads, responses, and resolution
 │   │   └── routers/
-│   │       ├── health.py     # Health check & system status
-│   │       ├── auth.py       # One-click demo login, session restore, logout
+│   │       ├── health.py       # Health check & system status
+│   │       ├── auth.py         # One-click demo login, session restore, logout
 │   │       ├── applications.py # Application listing, filtering, search & dossier
-│   │       ├── documents.py  # File upload validation, storage, and preview
+│   │       ├── documents.py    # File upload validation, storage, and preview
 │   │       ├── verification.py # Document verification, extraction, and finding review
-│   │       ├── compliance.py # Compliance obligations, evaluations, and review
-│   │       └── demo.py       # Demo reset control endpoint
-│   ├── storage/uploads/      # Local file storage for uploaded documents
+│   │       ├── compliance.py   # Compliance obligations, evaluations, and review
+│   │       ├── workflow.py     # Stage transitions, readiness assessment, assignments, decisions
+│   │       ├── clarifications.py # Clarification inquiries, replies, and resolution
+│   │       └── demo.py         # Demo reset control endpoint
+│   ├── storage/uploads/        # Local file storage for uploaded documents
 │   └── tests/
-│       ├── conftest.py       # Session-scoped test fixtures
-│       ├── test_health.py    # Health check tests
-│       ├── test_auth.py      # Session token and authentication tests
-│       ├── test_seed.py      # Persistence and idempotency tests
+│       ├── conftest.py         # Session-scoped test fixtures
+│       ├── test_health.py      # Health check tests
+│       ├── test_auth.py        # Session token and authentication tests
+│       ├── test_seed.py        # Persistence and idempotency tests
 │       ├── test_applications.py # Role access and application listing tests
-│       ├── test_documents.py # Upload validation and secure download tests
+│       ├── test_documents.py   # Upload validation and secure download tests
 │       ├── test_verification.py # PyMuPDF extraction, checks, and review tests
-│       └── test_rules_engine.py # Compliance checks, citations, versions, and overrides
-
-└── frontend/                 # React + TypeScript Vite frontend
-    ├── package.json          # Frontend dependencies & npm scripts
-    ├── vite.config.ts        # Vite configuration & backend proxy
-    ├── tailwind.config.ts    # Semantic token mappings & theme configuration
-    ├── eslint.config.js      # ESLint 9 configuration with strict checks
+│       ├── test_rules_engine.py # Compliance checks, citations, versions, and overrides
+│       └── test_workflow.py    # Workflow transitions, readiness blockers, assignments, clarifications, decisions
+│
+└── frontend/                   # React + TypeScript Vite frontend
+    ├── package.json            # Frontend dependencies & npm scripts
+    ├── vite.config.ts          # Vite configuration & backend proxy
+    ├── tailwind.config.ts      # Semantic token mappings & theme configuration
+    ├── eslint.config.js        # ESLint 9 configuration with strict checks
     ├── src/
-    │   ├── main.tsx          # Client entrypoint
-    │   ├── App.tsx           # Providers and root routing
+    │   ├── main.tsx            # Client entrypoint
+    │   ├── App.tsx             # Providers and root routing
     │   ├── app/
-    │   │   ├── router.tsx    # Route definitions (Protected routes)
-    │   │   ├── providers.tsx # QueryClient, AuthProvider & MotionConfig
-    │   │   └── layout/       # AppShell, Sidebar, TopBar, ThemeMenu
-    │   ├── styles/           # Design tokens, typography, and globals
-    │   ├── lib/              # API client, theme switcher, motion, contrast test
-    │   ├── components/       # StatusBadge, DemoPill, Button, Card, FindingCard, DocumentExtractionDrawer
+    │   │   ├── router.tsx      # Route definitions (Protected routes)
+    │   │   ├── providers.tsx   # QueryClient, AuthProvider & MotionConfig
+    │   │   └── layout/         # AppShell, Sidebar, TopBar, ThemeMenu
+    │   ├── styles/             # Design tokens, typography, and globals
+    │   ├── lib/                # API client, theme switcher, motion, contrast test, workflow test
+    │   ├── components/         # StatusBadge, DemoPill, Button, Card, FindingCard, DocumentExtractionDrawer
     │   ├── features/
-    │   │   ├── auth/         # SignInPage, AuthContext, ProtectedRoute
-    │   │   ├── applications/ # ListPage, DossierPage
-    │   │   └── foundation/   # Foundation readiness and route placeholders
-    │   └── types/            # Domain TypeScript interfaces
-    └── dist/                 # Production build output
+    │   │   ├── auth/           # SignInPage, AuthContext, ProtectedRoute
+    │   │   ├── applications/   # ListPage, DossierPage
+    │   │   ├── compliance/     # ComplianceCard, ComplianceSummaryCards, ComplianceAuditHistory
+    │   │   ├── workflow/       # WorkflowActionCenter, AdvanceStageModal, ReturnStageModal, AssignOfficerModal, DecisionRecordModal
+    │   │   ├── clarifications/ # ClarificationThread, ClarificationRequestModal, ClarificationReplyModal, ClarificationResolveModal
+    │   │   └── foundation/     # Foundation readiness and route placeholders
+    │   └── types/              # Domain TypeScript interfaces
+    └── dist/                   # Production build output
 ```
 
 ---
@@ -89,46 +98,45 @@ PRISM features a lightweight, passwordless one-click authentication system tailo
 
 | Role | Demo Persona | Institution | Permissions |
 |---|---|---|---|
-| **Institution User** | Dr. Ramesh Gupta | Apex Institute of Technology (`inst-01`) | Views only their institution's applications, uploads supporting documents, views dossiers for their institution. Cross-institution access is strictly denied. |
-| **Review Officer** | Priya Sharma | Regulatory Review Bureau | Reviews all assigned applications across institutions, inspects dossiers, advances stages, downloads documents. |
-| **System Administrator** | Vikramaditya Nair | System Administration | Global visibility over all institutions, applications, users, documents, and audit logs. |
+| **Institution User** | Dr. Ramesh Gupta | Apex Institute of Technology (`inst-01`) | Views only their institution's applications, uploads supporting documents, submits initial application drafts, and responds to interlocutory clarification requests. Cross-institution access is strictly denied. |
+| **Review Officer** | Priya Sharma | Regulatory Review Bureau | Reviews all applications across institutions, assesses stage readiness, advances/returns stages, initiates and resolves clarification inquiries, and records statutory determinations. |
+| **System Administrator** | Vikramaditya Nair | System Administration | Global administrative visibility, assigns/reassigns scrutiny officers, updates stage configurations, and exercises statutory overrides when authorized. |
 
 ---
 
-## Getting Started Locally
+## Workflow Automation Engine (Phase 5)
 
-### 1. Backend Service
+PRISM enforces an authoritative regulatory approval lifecycle across 8 configurable stages:
 
-Requirements: Python 3.11+ (Python 3.12+ recommended) and `uv` or `pip`.
+1. **Configurable Stage Sequence**:
+   - `stage-draft`: Institutional compilation and document preparation.
+   - `stage-submitted`: Formal intake and statutory submission.
+   - `stage-doc-check`: Initial completeness and document readability check.
+   - `stage-desk-review`: Substantive regulatory verification and rules engine scrutiny.
+   - `stage-clarification`: Interlocutory procedural discourse and institution responses.
+   - `stage-committee`: Scrutiny committee and hearing panel evaluation.
+   - `stage-decision`: Final statutory determination (Approval / Rejection).
+   - `stage-closed`: Terminal archival and decision recording.
 
-```bash
-cd backend
+2. **Stage Readiness & Blocker Evaluation (`WorkflowEngine.evaluate_stage_readiness`)**:
+   - Assesses 6 distinct categories of stage blockers:
+     - **Documents**: Unreadable, corrupt, or missing mandatory evidentiary files.
+     - **Findings**: Unreviewed high or medium severity document inconsistencies.
+     - **Compliance**: Unsatisfied obligations or obligations pending human review under AICTE APH norms.
+     - **Clarifications**: Open or unresolved clarification threads.
+     - **Assignments**: Unassigned scrutiny officer ownership on higher evaluation stages.
+     - **Decisions**: Absence of a recorded statutory determination when in decision stages.
+   - **Administrator Override**: Authorised administrators may override blocking conditions with mandatory legal justification recorded in the immutable audit trail.
 
-# Option A: Using uv (fastest)
-uv venv
-uv pip install -r requirements.txt
-uv run uvicorn main:app --reload --port 8000
+3. **Interlocutory Clarification Threads**:
+   - Scrutiny officers can initiate formal clarification inquiries pre-linked to specific findings or rule codes.
+   - Institution users receive immediate notification, submit threaded responses, and attach new or existing evidentiary documents.
+   - Scrutiny officers review responses and record official resolution notes or cancel obsolete inquiries.
 
-# Option B: Using standard Python venv
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
-```
-
-Verify backend health at `http://localhost:8000/api/health` or browse interactive OpenAPI documentation at `http://localhost:8000/docs`.
-
-### 2. Frontend Application
-
-Requirements: Node.js 18+ and `npm`.
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Open your browser at `http://localhost:5173`. If you are not authenticated, you will be redirected to the `/signin` screen.
+4. **Statutory Regulatory Determination (`DecisionRecord`)**:
+   - Formal Approval or Rejection recorded by authorized officers/administrators.
+   - Requires recorded statutory grounds, conditions of approval (e.g., temporary NOC fulfillment windows), and links to reference findings.
+   - Issuing a decision immediately transitions the application to the terminal `stage-closed` status.
 
 ---
 
@@ -141,59 +149,35 @@ Run the verification suite across both projects:
 cd frontend
 npm run typecheck    # TypeScript compiler check (0 errors)
 npm run lint         # ESLint check (0 errors, 0 warnings)
-npm run test         # Vitest test suite (32 tests passing: WCAG contrast + auth storage)
+npm run test         # Vitest test suite (40 tests passing: WCAG contrast, auth, compliance, workflow)
 npm run build        # Production bundle build (clean Vite build, zero errors)
 ```
 
 ### Backend
 ```bash
 cd backend
-uv run pytest        # Pytest test suite (37 tests passing: auth, seed, applications, documents, verification)
+uv run pytest        # Pytest test suite (59 tests passing: auth, seed, applications, documents, verification, compliance, workflow)
 ```
 
 ---
 
-## Document Verification Engine (Phase 3)
+## Getting Started Locally
 
-The PRISM Document Verification Engine automatically processes uploaded supporting documents and executes deterministic compliance checks against application records:
-
-1. **Extraction Pipeline (`DocumentProcessor` & `FieldExtractor`)**:
-   - Uses **PyMuPDF** to extract page streams and text layers cleanly.
-   - Extracts structured regulatory entities: Institution Name, Document Identifiers, Registration/Issuance Dates, Certificate Expiry Dates, and Land Survey Numbers.
-   - Uses explicit states (`extracted`, `uncertain`, `not_found`) rather than fabricating artificial confidence scores.
-   - Preserves verbatim monospace text excerpts and page references for auditing.
-
-2. **Deterministic Regulatory Cross-Checks (`VerificationPipeline`)**:
-   - `CHK_INST_MATCH`: Discrepancy between document institution and application record.
-   - `CHK_DATE_ORDER`: Certificate dated later than application submission.
-   - `CHK_EXPIRY_PAST`: Expired certificate (High severity).
-   - `CHK_EXPIRY_SOON`: Certificate expiring within 60 days (Medium severity).
-   - `CHK_MISSING_SURVEY`: Missing land survey or plot allocation reference.
-   - `CHK_EMPTY_DOC`: Empty file payload (0 bytes).
-   - `CHK_CORRUPT_DOC`: Unreadable or corrupt document binary.
-
-3. **Human Review Workflow (`FindingCard`)**:
-   - Regulatory Officers can **Confirm** or **Dismiss** findings with optional audit notes.
-   - Mandatory disclaimer: *"Findings are possible issues flagged for human review. They do not establish authenticity or decide outcomes."*
-   - Institution users view findings in read-only mode without internal reviewer actions.
-
----
-
-## Resetting Demo Data
-
-To reset the SQLite database back to its deterministic seed state with relative dates:
-
+### 1. Backend Service
 ```bash
-curl -X POST http://localhost:8000/api/demo/reset
+cd backend
+uv venv
+uv pip install -r requirements.txt
+uv run uvicorn main:app --reload --port 8000
 ```
+- Interactive API Documentation: `http://localhost:8000/docs`
+- Health check: `http://localhost:8000/api/health`
 
-Or trigger it directly from Settings once implemented in Phase 4.
-
----
-
-## Security & Demo Limitations
-
-1. **Demo Authentication**: The one-click login issues HMAC-SHA256 signed session tokens. In production, this must be replaced by OAuth2/OIDC with proper multi-factor authentication and official government credential verification.
-2. **File Storage**: Uploads are stored locally in `backend/storage/uploads/` using sanitized server-generated filenames. In production, this should interface with private S3/GCS object storage with pre-signed access URLs.
-3. **MIME and Header Verification**: File types are verified via magic byte inspection (`%PDF-`, PNG, JPEG) and extension matching. While this prevents file-type spoofing, it does not prove the legal authenticity of the regulatory document.
-4. **Findings & Compliance**: System-generated findings are possibilities flagged for human review. They do not decide outcomes or certify official legal compliance.
+### 2. Frontend Application
+```bash
+cd frontend
+npm install
+npm run dev
+```
+- Web Application: `http://localhost:5173`
+- Default redirect to `/signin` with instant demo persona selection.
