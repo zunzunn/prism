@@ -36,13 +36,46 @@ export function removeAuthToken(): void {
   localStorage.removeItem(AUTH_TOKEN_KEY);
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+export function getBaseApiUrl(): string {
+  const envUrl = (import.meta.env.VITE_API_URL || '').trim();
+  if (import.meta.env.PROD && !envUrl) {
+    console.warn(
+      '[PRISM] VITE_API_URL environment variable is not configured. ' +
+      'Requests are defaulting to relative paths and may fail if backend is hosted on a separate domain.'
+    );
+  }
+  return envUrl.replace(/\/+$/, '');
+}
+
+export function getApiUrl(endpoint: string): string {
+  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+    return endpoint;
+  }
+  
+  const base = getBaseApiUrl();
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  
+  if (!base) {
+    return normalizedEndpoint;
+  }
+  
+  return `${base}${normalizedEndpoint}`;
+}
+
+export function getAuthenticatedDocumentUrl(documentId: string): string {
+  const url = getApiUrl(`/api/documents/${documentId}/file`);
+  const token = getAuthToken();
+  if (!token) return url;
+  
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}token=${encodeURIComponent(token)}`;
+}
 
 export async function apiClient<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+  const url = getApiUrl(endpoint);
   
   const headers = new Headers(options.headers || {});
   

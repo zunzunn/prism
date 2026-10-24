@@ -33,7 +33,7 @@ import { ClarificationThread } from '@/features/clarifications/ClarificationThre
 import { ClarificationRequestModal } from '@/features/clarifications/ClarificationRequestModal';
 import { WorkflowActionCenter } from '@/features/workflow/WorkflowActionCenter';
 import { useAuth } from '@/features/auth/useAuth';
-import { apiClient } from '@/lib/api';
+import { apiClient, getAuthenticatedDocumentUrl } from '@/lib/api';
 import { formatDateIST, formatDateTimeIST, formatRelativeDays } from '@/lib/dates';
 import {
   ApplicationComplianceResponse,
@@ -920,7 +920,7 @@ export const DossierPage: React.FC = () => {
 
                               {/* Download Link */}
                               <a
-                                href={`/api/documents/${doc.id}/file`}
+                                href={getAuthenticatedDocumentUrl(doc.id)}
                                 download={doc.original_filename}
                                 className="inline-flex items-center justify-center h-7 px-2 text-xs rounded-md bg-surface border border-border text-text hover:bg-surface-2 transition-colors"
                                 title="Download document"
@@ -1440,13 +1440,13 @@ export const DossierPage: React.FC = () => {
             <div className="flex-1 overflow-auto p-4 bg-surface-2/40 flex items-center justify-center min-h-[400px]">
               {previewDoc.mime_type.startsWith('image/') ? (
                 <img
-                  src={`/api/documents/${previewDoc.id}/file`}
+                  src={getAuthenticatedDocumentUrl(previewDoc.id)}
                   alt={previewDoc.original_filename}
                   className="max-h-[70vh] max-w-full rounded object-contain border border-border"
                 />
               ) : previewDoc.mime_type === 'application/pdf' ? (
                 <iframe
-                  src={`/api/documents/${previewDoc.id}/file`}
+                  src={getAuthenticatedDocumentUrl(previewDoc.id)}
                   title={previewDoc.original_filename}
                   className="w-full h-[65vh] border border-border rounded"
                 />
@@ -1456,7 +1456,7 @@ export const DossierPage: React.FC = () => {
                     Embedded preview is not supported for this file type.
                   </p>
                   <a
-                    href={`/api/documents/${previewDoc.id}/file`}
+                    href={getAuthenticatedDocumentUrl(previewDoc.id)}
                     download={previewDoc.original_filename}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-accent text-accent-fg text-xs font-medium"
                   >

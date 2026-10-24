@@ -12,6 +12,7 @@ interface HealthResponse {
   status: string;
   app: string;
   version: string;
+  database?: string;
 }
 
 export const FoundationReadinessPage: React.FC = () => {
@@ -86,8 +87,9 @@ export const FoundationReadinessPage: React.FC = () => {
           </p>
           <div className="bg-surface-2 rounded-md p-3 text-xs font-mono space-y-1 border border-border">
             <div>status: <span className="text-accent">{health?.status || (isHealthLoading ? 'checking...' : 'disconnected')}</span></div>
+            <div>database: <span className={health?.database === 'connected' ? 'text-success' : 'text-danger'}>{health?.database || (isHealthLoading ? 'checking...' : 'disconnected')}</span></div>
             <div>app: <span className="text-text">{health?.app || 'PRISM API'}</span></div>
-            <div>version: <span className="text-text">{health?.version || '0.1.0'}</span></div>
+            <div>version: <span className="text-text">{health?.version || '0.2.0'}</span></div>
           </div>
         </Card>
 
