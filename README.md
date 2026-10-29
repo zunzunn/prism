@@ -10,7 +10,8 @@ CREDEN is an enterprise-grade academic data infrastructure and verification plat
 - **Framework:** React 18 with TypeScript in strict mode
 - **Build Tool:** Vite
 - **Styling:** Tailwind CSS with minimal dark enterprise design tokens
-- **Routing:** React Router v6
+- **3D Graphics:** Three.js animated geodesic academic identity network with WebGL fallback & reduced-motion support
+- **Routing:** React Router v6 (Public Landing Page `/`, Interactive App Shell `/dashboard`)
 - **Icons:** Lucide React
 - **HTTP Client:** Axios with response interceptors
 - **Analytics & Visuals:** Recharts & Framer Motion
