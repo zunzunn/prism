@@ -53,3 +53,8 @@ body {
 .creden-border {
   border-color: #1b212d;
 }
+
+/* Radial dark vignette for hero canvas overlay */
+.bg-radial-vignette {
+  background: radial-gradient(circle at center, rgba(6, 7, 9, 0.4) 0%, rgba(6, 7, 9, 0.82) 75%, #060709 100%);
+}
