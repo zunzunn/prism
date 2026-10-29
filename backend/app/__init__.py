@@ -1,1 +1,0 @@
-"""PRISM backend application package."""
