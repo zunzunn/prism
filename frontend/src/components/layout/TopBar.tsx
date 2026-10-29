@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Menu,
   Search,
@@ -6,6 +7,9 @@ import {
   AlertTriangle,
   RefreshCw,
   Box,
+  LogOut,
+  Settings,
+  BookOpen,
 } from "lucide-react";
 import { checkBackendHealth, HealthResponse } from "@/services/api";
 import { RoleSwitcher } from "./RoleSwitcher";
@@ -32,6 +36,10 @@ export const TopBar: React.FC<TopBarProps> = ({
   }
 
   const effectiveRole = roleContext ? roleContext.currentRole : activeRole;
+  const navigate = useNavigate();
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [loadingHealth, setLoadingHealth] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -53,6 +61,19 @@ export const TopBar: React.FC<TopBarProps> = ({
     fetchHealth();
     const interval = setInterval(fetchHealth, 30000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target as Node)
+      ) {
+        setProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleRoleSelect = (role: UserRole) => {
@@ -147,9 +168,88 @@ export const TopBar: React.FC<TopBarProps> = ({
           <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
         </button>
 
-        {/* Profile Avatar */}
-        <div className="flex h-8 w-8 items-center justify-center rounded border border-[#232d3f] bg-[#121824] text-xs font-semibold text-zinc-200">
-          AD
+        {/* Quick Direct Logout Icon */}
+        <button
+          onClick={() => {
+            if (roleContext?.logout) {
+              roleContext.logout();
+            } else {
+              navigate("/logout");
+            }
+          }}
+          title="Sign Out of CREDEN"
+          aria-label="Sign Out"
+          className="flex h-8 w-8 items-center justify-center rounded border border-[#1b2333] bg-[#0c1017] text-zinc-400 transition hover:border-rose-500/40 hover:bg-rose-500/10 hover:text-rose-400 cursor-pointer"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+        </button>
+
+        {/* Profile Avatar & Dropdown */}
+        <div className="relative" ref={profileMenuRef}>
+          <button
+            onClick={() => setProfileMenuOpen((prev) => !prev)}
+            aria-label="User profile menu"
+            className="flex h-8 w-8 items-center justify-center rounded border border-[#232d3f] bg-[#121824] text-xs font-semibold text-zinc-200 transition hover:border-emerald-500/50 hover:text-white cursor-pointer"
+          >
+            {roleContext?.currentUser?.avatarInitials || "AD"}
+          </button>
+
+          {profileMenuOpen && (
+            <div className="absolute right-0 mt-2 w-64 rounded-lg border border-[#1f293d] bg-[#090d15] p-3 shadow-xl shadow-black/80 z-50">
+              <div className="flex items-center space-x-3 pb-3 border-b border-[#182030]">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xs">
+                  {roleContext?.currentUser?.avatarInitials || "AD"}
+                </div>
+                <div className="truncate min-w-0">
+                  <p className="text-xs font-bold text-white truncate">
+                    {roleContext?.currentUser?.name || "AICTE Administrator"}
+                  </p>
+                  <p className="text-[11px] text-zinc-400 truncate font-mono">
+                    {roleContext?.currentUser?.email || "admin@aicte.gov.in"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="py-2 text-xs space-y-1">
+                <div className="px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+                  Role: <span className="text-emerald-400 font-bold">{effectiveRole}</span>
+                </div>
+                <Link
+                  to="/settings"
+                  onClick={() => setProfileMenuOpen(false)}
+                  className="flex items-center gap-2 rounded px-2 py-1.5 text-zinc-300 hover:bg-[#121926] hover:text-white transition"
+                >
+                  <Settings className="h-3.5 w-3.5 text-zinc-400" />
+                  <span>Platform Settings</span>
+                </Link>
+                <Link
+                  to="/demo-guide"
+                  onClick={() => setProfileMenuOpen(false)}
+                  className="flex items-center gap-2 rounded px-2 py-1.5 text-zinc-300 hover:bg-[#121926] hover:text-white transition"
+                >
+                  <BookOpen className="h-3.5 w-3.5 text-zinc-400" />
+                  <span>Demonstration Guide</span>
+                </Link>
+              </div>
+
+              <div className="pt-2 border-t border-[#182030]">
+                <button
+                  onClick={() => {
+                    setProfileMenuOpen(false);
+                    if (roleContext?.logout) {
+                      roleContext.logout();
+                    } else {
+                      navigate("/logout");
+                    }
+                  }}
+                  className="w-full flex items-center gap-2 rounded px-2 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition cursor-pointer"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>

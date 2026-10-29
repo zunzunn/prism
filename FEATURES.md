@@ -6,7 +6,7 @@ CREDEN is an academic data governance and credential verification platform built
 
 ## Quick Navigation & Roles
 
-CREDEN includes a **Quick Role Switcher** in the top navigation bar. Switch roles at any time to see role-tailored dashboards and permissions:
+CREDEN includes a **Quick Role Switcher** in the top navigation bar and a dedicated **Sign In / Sign Out** authentication flow:
 - **AICTE Admin:** Full national governance, validation center, intake compliance, and system audit logs.
 - **Institution Admin:** Institution-level student record uploads, programme quotas, and local discrepancy resolution.
 - **Authorized Verifier:** Opaque credential verification for employers and external universities.
@@ -16,7 +16,22 @@ CREDEN includes a **Quick Role Switcher** in the top navigation bar. Switch role
 
 ## Core Features & Usage Instructions
 
-### 1. Interactive 3D Landing Page
+### 1. Terminal Authentication: Login & Secure Logout
+* **Routes:** `/login` & `/logout`
+* **What it does:** Enterprise authentication portal providing role-specific authenticated access, 1-click demonstration personas, and cryptographic session termination.
+* **How to use:**
+  - Navigate to `/login` or click **Sign In** in the top navigation bar.
+  - Use one of the 4 **1-Click Demonstration Personas**:
+    - **AICTE Central Admin** (`admin@aicte.gov.in`) $\rightarrow$ opens National Governance Dashboard (`/dashboard`)
+    - **Institution Registrar** (`registrar@coep.ac.in`) $\rightarrow$ opens COEP student records (`/students?institution=COEP`)
+    - **Authorized Verifier** (`verifications@tcs.com`) $\rightarrow$ opens Employer Verification Desk (`/verification`)
+    - **Student** (`aarav.sharma@students.aicte.gov.in`) $\rightarrow$ opens Academic Identity Pass (`/student`)
+  - Alternatively, enter any custom email and password to log in with simulated 2FA checks.
+  - **Signing Out:** Click the user profile dropdown or the Sign Out icon in the top navigation bar, or select **Sign Out** at the bottom of the sidebar. You will be taken to `/logout`, which confirms cryptographic session invalidation, displays a session revocation receipt, and provides a 10-second redirect back to the home page.
+
+---
+
+### 2. Interactive 3D Landing Page
 * **Route:** `/`
 * **What it does:** An academic identity showcase featuring an interactive Three.js 3D network with pulsating nodes and connection arcs.
 * **How to use:**
@@ -27,7 +42,7 @@ CREDEN includes a **Quick Role Switcher** in the top navigation bar. Switch role
 
 ---
 
-### 2. AICTE National Governance Dashboard
+### 3. AICTE National Governance Dashboard
 * **Route:** `/dashboard`
 * **What it does:** Real-time national overview of all technical institutions, aggregate student enrolments, flagged discrepancies, and intake compliance metrics.
 * **How to use:**
@@ -37,7 +52,7 @@ CREDEN includes a **Quick Role Switcher** in the top navigation bar. Switch role
 
 ---
 
-### 3. Institution Management
+### 4. Institution Management
 * **Route:** `/institutions` (Details: `/institutions/:id`, e.g., `/institutions/INST-001`)
 * **What it does:** Directory of all AICTE-approved colleges and universities with approved seat caps, reported admissions, and compliance health.
 * **How to use:**
@@ -47,7 +62,7 @@ CREDEN includes a **Quick Role Switcher** in the top navigation bar. Switch role
 
 ---
 
-### 4. Student Records & CSV Batch Upload
+### 5. Student Records & CSV Batch Upload
 * **Route:** `/students` (Details: `/students/:id`)
 * **What it does:** Searchable repository of student academic records with privacy-preserving masked APAAR identifiers (`•••• •••• 4892`) and an automated CSV ingestion engine.
 * **How to use:**
@@ -60,7 +75,7 @@ CREDEN includes a **Quick Role Switcher** in the top navigation bar. Switch role
 
 ---
 
-### 5. Explainable Validation Center
+### 6. Explainable Validation Center
 * **Route:** `/validation` (Details: `/validation/:id`)
 * **What it does:** Automated diagnostic engine that identifies and explains student record inconsistencies without opaque black-box errors.
 * **Rules & Checks:**
@@ -73,7 +88,7 @@ CREDEN includes a **Quick Role Switcher** in the top navigation bar. Switch role
 
 ---
 
-### 6. Statutory Intake Monitoring
+### 7. Statutory Intake Monitoring
 * **Route:** `/intake`
 * **What it does:** Monitors institution and programme capacity against approved seat quotas.
 * **Intelligent Supernumerary Handling:**
@@ -85,7 +100,7 @@ CREDEN includes a **Quick Role Switcher** in the top navigation bar. Switch role
 
 ---
 
-### 7. Academic Verification Portal
+### 8. Academic Verification Portal
 * **Route:** `/verification` (Direct link: `/verify/:reference`)
 * **What it does:** Sub-second credential verification for authorized employers and higher education institutions using opaque cryptographic reference codes and secure QR tokens.
 * **Privacy by Design:**
@@ -100,7 +115,7 @@ CREDEN includes a **Quick Role Switcher** in the top navigation bar. Switch role
 
 ---
 
-### 8. Student Academic Identity Portal
+### 9. Student Academic Identity Portal
 * **Route:** `/student`
 * **What it does:** A dedicated view for students to review their academic records, check verification references, and confirm compliance status.
 * **How to use:**
@@ -111,7 +126,7 @@ CREDEN includes a **Quick Role Switcher** in the top navigation bar. Switch role
 
 ---
 
-### 9. Analytics, Forecast & Reports
+### 10. Analytics, Forecast & Reports
 * **Routes:** `/analytics` & `/reports`
 * **What it does:** Governance analytics, future enrolment forecasting (CAGR models), regional discrepancy breakdowns, and exportable AICTE compliance reports.
 * **How to use:**

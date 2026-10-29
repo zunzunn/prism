@@ -1,6 +1,9 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
+import { RootLayout } from "@/layouts/RootLayout";
 import { AppShell } from "@/layouts/AppShell";
 import { LandingPage } from "@/pages/LandingPage";
+import { LoginPage } from "@/pages/LoginPage";
+import { LogoutPage } from "@/pages/LogoutPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { InstitutionsListPage } from "@/pages/InstitutionsListPage";
 import { InstitutionDetailPage } from "@/pages/InstitutionDetailPage";
@@ -19,83 +22,102 @@ import { SettingsPage } from "@/pages/SettingsPage";
 import { DemoGuidePage } from "@/pages/DemoGuidePage";
 
 export const router = createBrowserRouter([
-  // Public Landing Page
   {
-    path: "/",
-    element: <LandingPage />,
-  },
-
-  // Authenticated/Internal Application Shell
-  {
-    element: <AppShell />,
+    element: <RootLayout />,
     children: [
+      // Public Landing Page
       {
-        path: "dashboard",
-        element: <DashboardPage />,
+        path: "/",
+        element: <LandingPage />,
+      },
+
+      // Authentication Pages
+      {
+        path: "/login",
+        element: <LoginPage />,
       },
       {
-        path: "institutions",
-        element: <InstitutionsListPage />,
+        path: "/logout",
+        element: <LogoutPage />,
       },
+
+      // Authenticated/Internal Application Shell
       {
-        path: "institutions/:id",
-        element: <InstitutionDetailPage />,
-      },
-      {
-        path: "students",
-        element: <StudentsListPage />,
-      },
-      {
-        path: "students/:id",
-        element: <StudentDetailPage />,
-      },
-      {
-        path: "validation",
-        element: <ValidationCenterPage />,
-      },
-      {
-        path: "validation/:id",
-        element: <ValidationDetailPage />,
-      },
-      {
-        path: "intake",
-        element: <IntakeMonitoringPage />,
-      },
-      {
-        path: "verification",
-        element: <VerificationPage />,
-      },
-      {
-        path: "verify/:reference",
-        element: <VerifyReferencePage />,
-      },
-      {
-        path: "student",
-        element: <StudentPortalPage />,
-      },
-      {
-        path: "analytics",
-        element: <AnalyticsForecastPage />,
-      },
-      {
-        path: "reports",
-        element: <ReportsPage />,
-      },
-      {
-        path: "compliance",
-        element: <AuditLogsPage />,
-      },
-      {
-        path: "settings",
-        element: <SettingsPage />,
-      },
-      {
-        path: "demo-guide",
-        element: <DemoGuidePage />,
+        element: <AppShell />,
+        children: [
+          {
+            path: "dashboard",
+            element: <DashboardPage />,
+          },
+          {
+            path: "institutions",
+            element: <InstitutionsListPage />,
+          },
+          {
+            path: "institutions/:id",
+            element: <InstitutionDetailPage />,
+          },
+          {
+            path: "students",
+            element: <StudentsListPage />,
+          },
+          {
+            path: "students/:id",
+            element: <StudentDetailPage />,
+          },
+          {
+            path: "validation",
+            element: <ValidationCenterPage />,
+          },
+          {
+            path: "validation/:id",
+            element: <ValidationDetailPage />,
+          },
+          {
+            path: "intake",
+            element: <IntakeMonitoringPage />,
+          },
+          {
+            path: "verification",
+            element: <VerificationPage />,
+          },
+          {
+            path: "verify/:reference",
+            element: <VerifyReferencePage />,
+          },
+          {
+            path: "student",
+            element: <StudentPortalPage />,
+          },
+          {
+            path: "analytics",
+            element: <AnalyticsForecastPage />,
+          },
+          {
+            path: "reports",
+            element: <ReportsPage />,
+          },
+          {
+            path: "compliance",
+            element: <AuditLogsPage />,
+          },
+          {
+            path: "settings",
+            element: <SettingsPage />,
+          },
+          {
+            path: "demo-guide",
+            element: <DemoGuidePage />,
+          },
+          {
+            path: "*",
+            element: <Navigate to="/dashboard" replace />,
+          },
+        ],
       },
       {
         path: "*",
-        element: <Navigate to="/dashboard" replace />,
+        element: <Navigate to="/" replace />,
       },
     ],
   },

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Fingerprint, ArrowRight, Menu, X } from "lucide-react";
+import { Fingerprint, ArrowRight, Menu, X, LogIn } from "lucide-react";
 
 export const LandingNav: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -69,6 +69,13 @@ export const LandingNav: React.FC = () => {
         {/* Right CTA */}
         <div className="hidden items-center space-x-3 sm:flex">
           <Link
+            to="/login"
+            className="flex items-center gap-1.5 rounded border border-[#222d3d] bg-[#0d121c] px-3 py-2 text-xs font-semibold text-zinc-200 transition hover:border-[#2f3e55] hover:bg-[#141b27] hover:text-white"
+          >
+            <LogIn className="h-3.5 w-3.5 text-emerald-400" />
+            <span>Sign In</span>
+          </Link>
+          <Link
             to="/dashboard"
             className="flex items-center gap-2 rounded border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-300 transition-all hover:border-emerald-500/60 hover:bg-emerald-500/20 hover:text-emerald-200"
           >
@@ -115,13 +122,22 @@ export const LandingNav: React.FC = () => {
             >
               Security
             </button>
-            <Link
-              to="/dashboard"
-              className="mt-2 flex items-center justify-center gap-2 rounded border border-emerald-500/40 bg-emerald-500/10 py-2.5 text-xs font-semibold text-emerald-300"
-            >
-              <span>Explore Dashboard</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+            <div className="mt-2 flex flex-col gap-2">
+              <Link
+                to="/login"
+                className="flex items-center justify-center gap-1.5 rounded border border-[#222d3d] bg-[#0d121c] py-2 text-xs font-semibold text-zinc-200"
+              >
+                <LogIn className="h-3.5 w-3.5 text-emerald-400" />
+                <span>Sign In</span>
+              </Link>
+              <Link
+                to="/dashboard"
+                className="flex items-center justify-center gap-2 rounded border border-emerald-500/40 bg-emerald-500/10 py-2.5 text-xs font-semibold text-emerald-300"
+              >
+                <span>Explore Dashboard</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </div>
         </div>
       )}

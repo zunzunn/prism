@@ -14,6 +14,7 @@ import {
   BookOpen,
   Fingerprint,
   ExternalLink,
+  LogOut,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -94,6 +95,11 @@ const secondaryNavItems = [
     name: "Demo Guide",
     path: "/demo-guide",
     icon: BookOpen,
+  },
+  {
+    name: "Sign Out",
+    path: "/logout",
+    icon: LogOut,
   },
 ];
 
