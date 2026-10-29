@@ -9,8 +9,11 @@ import {
   SearchCheck,
   FileCheck2,
   ShieldAlert,
-  Database,
   Settings,
+  Scale,
+  BarChart2,
+  FileText,
+  BookOpen,
 } from "lucide-react";
 
 export const router = createBrowserRouter([
@@ -29,24 +32,45 @@ export const router = createBrowserRouter([
         element: <DashboardPage />,
       },
       {
-        path: "students",
-        element: (
-          <PlaceholderModulePage
-            title="Student Registry & APAAR Records"
-            subtitle="National student registry database with automated APAAR ID mapping and credential ledger"
-            icon={Users}
-            badge="142k Records"
-          />
-        ),
-      },
-      {
         path: "institutions",
         element: (
           <PlaceholderModulePage
             title="Technical Institutions"
             subtitle="AICTE accredited colleges, autonomous institutions, and deemed engineering universities"
             icon={Building2}
-            badge="3,820 Institutes"
+            badge="3,824 Institutes"
+          />
+        ),
+      },
+      {
+        path: "students",
+        element: (
+          <PlaceholderModulePage
+            title="Student Records & APAAR Identity Registry"
+            subtitle="National student registry database with automated APAAR ID mapping and credential ledger"
+            icon={Users}
+            badge="1.4M Records"
+          />
+        ),
+      },
+      {
+        path: "validation",
+        element: (
+          <PlaceholderModulePage
+            title="Validation Center"
+            subtitle="High-throughput institutional CSV/JSON dataset validator with automated duplicate & anomaly checks"
+            icon={FileCheck2}
+          />
+        ),
+      },
+      {
+        path: "intake",
+        element: (
+          <PlaceholderModulePage
+            title="Intake Monitoring & Sanctioned Capacity"
+            subtitle="Real-time institutional admission tracking against approved AICTE quota caps"
+            icon={Scale}
+            badge="Capacity Oversight"
           />
         ),
       },
@@ -62,12 +86,22 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "validation",
+        path: "analytics",
         element: (
           <PlaceholderModulePage
-            title="Batch Validation Pipeline"
-            subtitle="High-throughput institutional CSV/JSON dataset validator with automated duplicate & anomaly checks"
-            icon={FileCheck2}
+            title="Analytics & Forecast"
+            subtitle="Predictive admissions trends, graduation rates, and national capacity projections"
+            icon={BarChart2}
+          />
+        ),
+      },
+      {
+        path: "reports",
+        element: (
+          <PlaceholderModulePage
+            title="Governance Reports"
+            subtitle="Downloadable state-wise compliance reports, executive digests, and accreditation statistics"
+            icon={FileText}
           />
         ),
       },
@@ -75,20 +109,10 @@ export const router = createBrowserRouter([
         path: "compliance",
         element: (
           <PlaceholderModulePage
-            title="AICTE Compliance & Audit Logs"
+            title="AICTE Audit Logs"
             subtitle="Immutable audit trail of all verification queries, verifier credentials, and discrepancy flags"
             icon={ShieldAlert}
             badge="Audited"
-          />
-        ),
-      },
-      {
-        path: "pipelines",
-        element: (
-          <PlaceholderModulePage
-            title="Data Pipelines & Sync Nodes"
-            subtitle="Sync status with state technical boards, Digilocker, and ABC (Academic Bank of Credits)"
-            icon={Database}
           />
         ),
       },
@@ -103,8 +127,19 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "demo-guide",
+        element: (
+          <PlaceholderModulePage
+            title="Interactive Demonstration Guide"
+            subtitle="Walkthrough of simulated AICTE governance workflows, test datasets, and verification endpoints"
+            icon={BookOpen}
+            badge="Demo v2.4"
+          />
+        ),
+      },
+      {
         path: "*",
-        element: <Navigate to="/" replace />,
+        element: <Navigate to="/dashboard" replace />,
       },
     ],
   },
