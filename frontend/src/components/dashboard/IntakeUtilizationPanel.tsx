@@ -1,6 +1,6 @@
 import React from "react";
 import { IntakeUtilizationSummary } from "@/types/governance";
-import { Scale, Info, CheckCircle2, AlertCircle } from "lucide-react";
+import { Scale, Info } from "lucide-react";
 
 interface IntakeUtilizationPanelProps {
   data: IntakeUtilizationSummary;

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { UserRole } from "@/types/governance";
-import { UserCheck, ChevronDown, Check, Shield } from "lucide-react";
+import { ChevronDown, Check, Shield } from "lucide-react";
 
 interface RoleSwitcherProps {
   currentRole: UserRole;

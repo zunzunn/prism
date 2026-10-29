@@ -1,7 +1,7 @@
 import React from "react";
 import { AuditActivityRecord } from "@/types/governance";
 import { formatDateTime } from "@/lib/utils";
-import { ShieldCheck, Activity, Terminal } from "lucide-react";
+import { Activity, Terminal } from "lucide-react";
 
 interface AuditActivityFeedProps {
   activities: AuditActivityRecord[];

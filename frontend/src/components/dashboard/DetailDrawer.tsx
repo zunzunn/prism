@@ -5,8 +5,6 @@ import {
   AlertTriangle,
   Building2,
   Calendar,
-  FileCheck2,
-  ShieldCheck,
   Send,
   CheckCircle,
 } from "lucide-react";

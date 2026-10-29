@@ -10,7 +10,7 @@ import {
   CalendarCheck,
   CheckCircle,
   Clock,
-  CopyAlert,
+  Copy,
   AlertOctagon,
   FileSearch,
 } from "lucide-react";
@@ -78,7 +78,7 @@ export const GovernanceMetricsGrid: React.FC<GovernanceMetricsGridProps> = ({
       label: "Potential Duplicate Enrolments",
       value: metrics.potentialDuplicateEnrolments,
       subtext: "Cross-institutional overlap flags",
-      icon: CopyAlert,
+      icon: Copy,
       targetRoute: "/compliance",
       badge: "Action Req",
       statusVariant: "danger",

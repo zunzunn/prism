@@ -77,7 +77,7 @@ export interface DuplicateAlertRecord {
   severity: "Critical" | "Warning" | "Review";
   detectedAt: string;
   explanation: string;
-  status: "Unresolved" | "Investigating" | "Resolved" | "False Positive";
+  status: "Unresolved" | "Investigating" | "Resolved" | "False Positive" | "Review";
 }
 
 export interface AuditActivityRecord {

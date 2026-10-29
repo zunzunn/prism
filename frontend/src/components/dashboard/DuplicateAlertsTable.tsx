@@ -1,6 +1,6 @@
 import React from "react";
 import { DuplicateAlertRecord } from "@/types/governance";
-import { AlertOctagon, ArrowRight, Eye, ShieldAlert } from "lucide-react";
+import { AlertOctagon, Eye, ShieldAlert } from "lucide-react";
 
 interface DuplicateAlertsTableProps {
   alerts: DuplicateAlertRecord[];
