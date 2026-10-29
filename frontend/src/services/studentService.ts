@@ -52,6 +52,16 @@ export const fetchStudents = async (
     filtered = filtered.filter((s) => s.academicYear === params.academicYear);
   }
 
+  // Institution code or alias filter
+  if (params.institutionCode && params.institutionCode !== "All") {
+    const instQuery = params.institutionCode.toLowerCase().trim();
+    filtered = filtered.filter(
+      (s) =>
+        s.institutionCode.toLowerCase().includes(instQuery) ||
+        s.institutionName.toLowerCase().includes(instQuery)
+    );
+  }
+
   // Category filter
   if (params.admissionCategory && params.admissionCategory !== "All") {
     filtered = filtered.filter((s) => s.admissionCategory === params.admissionCategory);
@@ -103,6 +113,129 @@ export const fetchStudentById = async (
     (s) => s.id === idOrApaar || s.apaarId === idOrApaar
   );
   return found || null;
+};
+
+import { apiClient } from "./api";
+
+// Append newly imported students into in-memory store so UI updates immediately
+export const addImportedStudents = (newStudents: StudentRecordDetail[]) => {
+  MOCK_STUDENTS.unshift(...newStudents);
+};
+
+export const ingestValidRowsToRegistry = (
+  validRows: CsvRowValidationResult[],
+  institutionCode: string = "1-332901124",
+  institutionName: string = "College of Engineering, Pune (COEP)"
+): StudentRecordDetail[] => {
+  const newRecords: StudentRecordDetail[] = validRows.map((r, idx) => {
+    const rawApaar = r.data["apaar_id"] || `98234412${String(idx + 100).padStart(4, "0")}`;
+    const cleanedApaar = rawApaar.replace(/[-\s]/g, "");
+    const formattedApaar =
+      cleanedApaar.length === 12
+        ? `${cleanedApaar.slice(0, 4)}-${cleanedApaar.slice(4, 8)}-${cleanedApaar.slice(8)}`
+        : rawApaar;
+
+    return {
+      id: `STU-IMP-${Date.now()}-${idx + 1}`,
+      apaarId: formattedApaar,
+      institutionStudentId: r.data["student_id"] || `COEP/2026/CS/${idx + 101}`,
+      fullName: r.data["full_name"] || "Enrolled Student",
+      institutionCode,
+      institutionName,
+      state: "Maharashtra",
+      programme: r.data["programme"] || "Computer Science & Engineering",
+      degreeLevel: "Undergraduate (B.Tech)",
+      academicYear: (r.data["academic_year"] as any) || "2026-27",
+      admissionDate: new Date().toISOString().split("T")[0] || "2026-08-15",
+      approvedIntakeReference: "AICTE/INTK/2026/CS-240",
+      admissionCategory: (r.data["admission_category"] as any) || "General / Open",
+      supernumeraryCategory: "None",
+      isNri: false,
+      isOci: false,
+      isForeignNational: false,
+      enrolmentStatus: "Active Enrolment",
+      validationStatus: r.status === "Warning" ? "Pending Validation" : "Verified",
+      lastUpdated: new Date().toISOString(),
+      integrityHash: `sha256-${Math.random().toString(36).substring(2, 15)}`,
+      auditTrail: [
+        {
+          event: "Batch CSV Ingestion",
+          timestamp: new Date().toISOString(),
+          actor: "Institution Admin (COEP)",
+        },
+        {
+          event: "APAAR Format Validation Passed",
+          timestamp: new Date().toISOString(),
+          actor: "AICTE Deterministic Validation Engine",
+        },
+      ],
+    };
+  });
+
+  addImportedStudents(newRecords);
+  return newRecords;
+};
+
+/**
+ * Uploads student CSV file to backend API (/api/students/upload),
+ * with automatic fallback to client-side validation if backend is offline.
+ */
+export const uploadStudentCsvToServer = async (
+  file: File,
+  parsedHeaders: string[],
+  parsedRows: Record<string, string>[],
+  institutionCode: string = "1-332901124"
+): Promise<CsvImportSummary> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("institution_code", institutionCode);
+
+  try {
+    const response = await apiClient.post("/api/students/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      timeout: 8000,
+    });
+
+    const data = response.data;
+    const summary: CsvImportSummary = {
+      fileName: data.file_name,
+      totalRows: data.total_rows,
+      validRowsCount: data.valid_rows_count,
+      warningRowsCount: data.warning_rows_count,
+      rejectedRowsCount: data.rejected_rows_count,
+      columnMappingIssues: data.column_mapping_issues || [],
+      batchReference: data.batch_reference,
+      sourceEngine: "AICTE Server-Side Ingestion Engine v2.4 (FastAPI)",
+      rowResults: (data.row_results || []).map((r: any) => ({
+        rowNumber: r.row_number,
+        data: r.data || {},
+        status: r.status,
+        errors: r.errors || [],
+        warnings: r.warnings || [],
+      })),
+    };
+
+    // If valid rows exist, ingest them into in-memory registry
+    const validRows = summary.rowResults.filter((r) => r.status === "Valid" || r.status === "Warning");
+    if (validRows.length > 0) {
+      ingestValidRowsToRegistry(validRows, institutionCode);
+    }
+
+    return summary;
+  } catch (err) {
+    console.warn("Backend CSV upload failed or offline. Using local deterministic fallback.", err);
+    // Offline local fallback
+    const fallbackSummary = validateParsedCsvRows(parsedHeaders, parsedRows, file.name);
+    fallbackSummary.sourceEngine = "Local Deterministic Fallback Engine (Demo Mode)";
+    fallbackSummary.batchReference = `BATCH-LOCAL-${Date.now().toString(36).toUpperCase()}`;
+
+    const validRows = fallbackSummary.rowResults.filter((r) => r.status === "Valid" || r.status === "Warning");
+    if (validRows.length > 0) {
+      ingestValidRowsToRegistry(validRows, institutionCode);
+    }
+
+    return fallbackSummary;
+  }
 };
 
 // Client-side CSV Schema Validator

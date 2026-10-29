@@ -88,4 +88,6 @@ export interface CsvImportSummary {
   rejectedRowsCount: number;
   columnMappingIssues: string[];
   rowResults: CsvRowValidationResult[];
+  batchReference?: string;
+  sourceEngine?: string;
 }

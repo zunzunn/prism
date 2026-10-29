@@ -22,7 +22,11 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    return settings.DATABASE_URL
+    try:
+        from app.db.session import engine
+        return str(engine.url)
+    except Exception:
+        return settings.FALLBACK_SQLITE_URL
 
 
 def run_migrations_offline() -> None:

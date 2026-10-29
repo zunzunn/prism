@@ -247,3 +247,103 @@ export const MOCK_STUDENTS: StudentRecordDetail[] = [
     ],
   },
 ];
+
+// Deterministic Pseudo-Random Generator for repeatable seed
+let seed = 42;
+function pseudoRandom() {
+  seed = (seed * 1664525 + 1013904223) % 4294967296;
+  return seed / 4294967296;
+}
+
+const FIRST_NAMES = [
+  "Aarav", "Aditi", "Aditya", "Akash", "Ananya", "Aniket", "Ankita", "Arjun",
+  "Deepak", "Divya", "Gaurav", "Harsh", "Isha", "Ishaan", "Karan", "Kavya",
+  "Manish", "Meera", "Naveen", "Neha", "Nikhil", "Pooja", "Pranav", "Priya",
+  "Rahul", "Riya", "Rohan", "Sakshi", "Sameer", "Sanjay", "Shreya", "Siddharth",
+  "Sneha", "Tanvi", "Utkarsh", "Varun", "Vikram", "Yash", "Zainab", "Arnav"
+];
+
+const LAST_NAMES = [
+  "Sharma", "Verma", "Patel", "Joshi", "Iyer", "Nair", "Rao", "Gupta",
+  "Deshmukh", "Kulkarni", "Choudhury", "Bose", "Banerjee", "Sengupta", "Reddy",
+  "Bhat", "Mehta", "Singh", "Aggarwal", "Kapoor", "Mishra", "Pandey", "Ghosh",
+  "Chakraborty", "Menon", "Pillai", "Nambiar", "Swaminathan", "Venkatesh"
+];
+
+const INSTITUTION_PRESETS = [
+  { code: "1-332901124", name: "College of Engineering, Pune (COEP)", state: "Maharashtra", alias: "COEP", prog: "Computer Science & Engineering" },
+  { code: "1-482910441", name: "Veermata Jijabai Technological Institute (VJTI), Mumbai", state: "Maharashtra", alias: "VJTI", prog: "Computer Engineering" },
+  { code: "1-772910382", name: "RV College of Engineering (RVCE), Bengaluru", state: "Karnataka", alias: "RVCE", prog: "Computer Science & Engineering" },
+  { code: "1-552910891", name: "BMS College of Engineering (BMSCE), Bengaluru", state: "Karnataka", alias: "BMSCE", prog: "Computer Science & Engineering" },
+  { code: "1-882910344", name: "Delhi Technological University (DTU)", state: "Delhi", alias: "DTU", prog: "Information Technology" },
+  { code: "1-882910129", name: "Netaji Subhas University of Technology (NSUT), Delhi", state: "Delhi", alias: "NSUT", prog: "Computer Engineering" },
+  { code: "1-558291023", name: "PSG College of Technology, Coimbatore", state: "Tamil Nadu", alias: "PSG", prog: "Computer Science & Engineering" },
+  { code: "1-112910443", name: "Thiagarajar College of Engineering, Madurai", state: "Tamil Nadu", alias: "TCE", prog: "Mechanical Engineering" },
+  { code: "1-449102871", name: "National Institute of Engineering, Mysuru", state: "Karnataka", alias: "NIE", prog: "Civil Engineering" },
+  { code: "1-772910291", name: "Institute of Engineering & Tech, Lucknow", state: "Uttar Pradesh", alias: "IET", prog: "Electronics & Communication Engg" },
+  { code: "1-442910118", name: "L.D. College of Engineering, Ahmedabad", state: "Gujarat", alias: "LDCE", prog: "Chemical Engineering" },
+  { code: "1-992910512", name: "Jadavpur University Faculty of Engg, Kolkata", state: "West Bengal", alias: "JU", prog: "Computer Science & Engineering" },
+];
+
+const CATEGORIES: ("General / Open" | "OBC-NCL" | "SC" | "ST" | "EWS")[] = [
+  "General / Open", "General / Open", "General / Open", "OBC-NCL", "OBC-NCL", "SC", "ST", "EWS"
+];
+
+// Generate exactly 992 synthetic deterministic records to reach 1,000 total records
+for (let i = 9; i <= 1000; i++) {
+  const fName = FIRST_NAMES[Math.floor(pseudoRandom() * FIRST_NAMES.length)];
+  const lName = LAST_NAMES[Math.floor(pseudoRandom() * LAST_NAMES.length)];
+  const inst = INSTITUTION_PRESETS[Math.floor(pseudoRandom() * INSTITUTION_PRESETS.length)] || INSTITUTION_PRESETS[0]!;
+  const cat = CATEGORIES[Math.floor(pseudoRandom() * CATEGORIES.length)] || "General / Open";
+
+  const num1 = String(1000 + Math.floor(pseudoRandom() * 9000));
+  const num2 = String(1000 + Math.floor(pseudoRandom() * 9000));
+  const num3 = String(1000 + Math.floor(pseudoRandom() * 9000));
+  const apaar = `${num1}-${num2}-${num3}`;
+
+  const yearRand = pseudoRandom();
+  const year = yearRand > 0.35 ? "2026-27" : yearRand > 0.15 ? "2025-26" : "2024-25";
+
+  const statusRand = pseudoRandom();
+  const valStatus =
+    statusRand > 0.12
+      ? "Verified"
+      : statusRand > 0.06
+      ? "Pending Validation"
+      : statusRand > 0.03
+      ? "Flagged Duplicate"
+      : statusRand > 0.015
+      ? "Intake Over-Quota"
+      : "Format Error";
+
+  MOCK_STUDENTS.push({
+    id: `STU-${String(i).padStart(4, "0")}`,
+    apaarId: apaar,
+    institutionStudentId: `${inst.alias}/${year.slice(0, 4)}/ENG/${String(i).padStart(3, "0")}`,
+    fullName: `${fName} ${lName}`,
+    institutionCode: inst.code,
+    institutionName: inst.name,
+    state: inst.state,
+    programme: inst.prog,
+    degreeLevel: "Undergraduate (B.Tech)",
+    academicYear: year,
+    admissionDate: `2026-08-${String(10 + (i % 18)).padStart(2, "0")}`,
+    approvedIntakeReference: `AICTE/${year.slice(0, 4)}/${inst.alias}/ENG-240`,
+    admissionCategory: cat,
+    supernumeraryCategory: i % 15 === 0 ? "Tuition Fee Waiver (TFW 5%)" : i % 25 === 0 ? "EWS (10%)" : "None",
+    isNri: false,
+    isOci: false,
+    isForeignNational: false,
+    enrolmentStatus: "Active Enrolment",
+    validationStatus: valStatus,
+    lastUpdated: "2026-10-28T12:00:00Z",
+    integrityHash: `sha256-${((seed * 99991) >>> 0).toString(16).padStart(8, "0")}${(i * 12345).toString(16)}`,
+    auditTrail: [
+      {
+        event: "Batch Enrollment Record Registered",
+        timestamp: "2026-08-20T10:00:00Z",
+        actor: `${inst.alias} Nodal Officer`,
+      },
+    ],
+  });
+}

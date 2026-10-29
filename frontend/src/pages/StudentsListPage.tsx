@@ -24,11 +24,24 @@ import {
   CheckSquare,
   Square,
   AlertOctagon,
+  Building,
 } from "lucide-react";
+import { useRole } from "@/context/RoleContext";
 
 export const StudentsListPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const initialInst = searchParams.get("institution") || "";
+
+  let roleCtx: any = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    roleCtx = useRole();
+  } catch {
+    // fallback
+  }
+
+  const isInstAdmin = roleCtx?.isInstitutionAdmin;
+  const effectiveInst = initialInst || (isInstAdmin ? roleCtx.scopedInstitution.code : "");
 
   const [students, setStudents] = useState<StudentRecordDetail[]>([]);
   const [total, setTotal] = useState(0);
@@ -63,7 +76,7 @@ export const StudentsListPage: React.FC = () => {
     try {
       const res = await fetchStudents({
         search,
-        institutionCode: initialInst,
+        institutionCode: effectiveInst,
         academicYear: selectedYear,
         admissionCategory: selectedCategory,
         validationStatus: selectedStatus,
@@ -82,7 +95,7 @@ export const StudentsListPage: React.FC = () => {
     }
   }, [
     search,
-    initialInst,
+    effectiveInst,
     selectedYear,
     selectedCategory,
     selectedStatus,
@@ -150,6 +163,15 @@ export const StudentsListPage: React.FC = () => {
 
       {/* Filter & Search Bar */}
       <div className="rounded border border-[#182130] bg-[#0c1017] p-4 space-y-3">
+        {effectiveInst && (
+          <div className="flex items-center justify-between rounded border border-sky-500/30 bg-sky-500/10 px-3 py-1.5 text-xs text-sky-300 font-mono">
+            <div className="flex items-center gap-2">
+              <Building className="h-3.5 w-3.5" />
+              <span>Active Scope: {effectiveInst === "1-332901124" || effectiveInst === "COEP" ? "College of Engineering Pune (COEP) [1-332901124]" : effectiveInst}</span>
+            </div>
+            <span className="text-[10px] text-sky-400 bg-sky-500/20 px-1.5 py-0.5 rounded">Scoped View</span>
+          </div>
+        )}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {/* Search Box */}
           <div className="lg:col-span-2 relative">

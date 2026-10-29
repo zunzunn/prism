@@ -14,12 +14,9 @@ import { ReportsPage } from "@/pages/ReportsPage";
 import { VerificationPage } from "@/pages/VerificationPage";
 import { VerifyReferencePage } from "@/pages/VerifyReferencePage";
 import { StudentPortalPage } from "@/pages/StudentPortalPage";
-import { PlaceholderModulePage } from "@/pages/PlaceholderModulePage";
-import {
-  ShieldAlert,
-  Settings,
-  BookOpen,
-} from "lucide-react";
+import { AuditLogsPage } from "@/pages/AuditLogsPage";
+import { SettingsPage } from "@/pages/SettingsPage";
+import { DemoGuidePage } from "@/pages/DemoGuidePage";
 
 export const router = createBrowserRouter([
   // Public Landing Page
@@ -86,35 +83,15 @@ export const router = createBrowserRouter([
       },
       {
         path: "compliance",
-        element: (
-          <PlaceholderModulePage
-            title="AICTE Audit Logs"
-            subtitle="Immutable audit trail of all verification queries, verifier credentials, and discrepancy flags"
-            icon={ShieldAlert}
-            badge="Audited"
-          />
-        ),
+        element: <AuditLogsPage />,
       },
       {
         path: "settings",
-        element: (
-          <PlaceholderModulePage
-            title="Platform Settings & API Keys"
-            subtitle="Manage AICTE node credentials, role-based access control, and webhooks"
-            icon={Settings}
-          />
-        ),
+        element: <SettingsPage />,
       },
       {
         path: "demo-guide",
-        element: (
-          <PlaceholderModulePage
-            title="Interactive Demonstration Guide"
-            subtitle="Walkthrough of simulated AICTE governance workflows, test datasets, and verification endpoints"
-            icon={BookOpen}
-            badge="Demo v2.4"
-          />
-        ),
+        element: <DemoGuidePage />,
       },
       {
         path: "*",

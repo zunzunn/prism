@@ -1,6 +1,9 @@
 import React, { useState, useRef } from "react";
 import { CsvImportSummary } from "@/types/students";
-import { validateParsedCsvRows } from "@/services/studentService";
+import {
+  validateParsedCsvRows,
+  uploadStudentCsvToServer,
+} from "@/services/studentService";
 import {
   X,
   UploadCloud,
@@ -99,27 +102,39 @@ export const CsvUploadModal: React.FC<CsvUploadModalProps> = ({
   };
 
   // 3. Process Validation
-  const handleStartValidation = () => {
+  const handleStartValidation = async () => {
     if (!file) return;
     setStep("processing");
-    setProgress(15);
+    setProgress(20);
 
     const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(timer);
-          // Run actual schema validator
-          const res = validateParsedCsvRows(parsedHeaders, parsedRows, file.name);
-          setSummary(res);
-          setStep("results");
-          if (onImportComplete) {
-            onImportComplete(res);
-          }
-          return 100;
-        }
-        return prev + 25;
-      });
-    }, 180);
+      setProgress((prev) => (prev < 85 ? prev + 15 : prev));
+    }, 120);
+
+    try {
+      const res = await uploadStudentCsvToServer(
+        file,
+        parsedHeaders,
+        parsedRows,
+        "1-332901124"
+      );
+      clearInterval(timer);
+      setProgress(100);
+      setSummary(res);
+      setStep("results");
+      if (onImportComplete) {
+        onImportComplete(res);
+      }
+    } catch {
+      clearInterval(timer);
+      const fallback = validateParsedCsvRows(parsedHeaders, parsedRows, file.name);
+      setProgress(100);
+      setSummary(fallback);
+      setStep("results");
+      if (onImportComplete) {
+        onImportComplete(fallback);
+      }
+    }
   };
 
   // 4. Download Validation Error Report
@@ -395,6 +410,25 @@ export const CsvUploadModal: React.FC<CsvUploadModalProps> = ({
           {/* STEP 4: Validation Results */}
           {step === "results" && summary && (
             <div className="space-y-4">
+              {/* Batch Engine & Reference Badge */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded border border-[#1d273a] bg-[#080b12] px-3.5 py-2 text-[11px] font-mono">
+                <div className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+                  <span className="text-zinc-400">Engine:</span>
+                  <span className="font-semibold text-emerald-400">
+                    {summary.sourceEngine || "AICTE Deterministic Ingestion Engine"}
+                  </span>
+                </div>
+                {summary.batchReference && (
+                  <div className="flex items-center gap-1.5 text-zinc-400">
+                    <span>Batch Ref:</span>
+                    <span className="rounded bg-[#121927] px-1.5 py-0.5 text-zinc-200">
+                      {summary.batchReference}
+                    </span>
+                  </div>
+                )}
+              </div>
+
               {/* Summary KPIs */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="rounded border border-emerald-500/30 bg-emerald-500/10 p-3 text-center">

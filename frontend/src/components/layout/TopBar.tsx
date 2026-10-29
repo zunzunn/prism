@@ -10,6 +10,7 @@ import {
 import { checkBackendHealth, HealthResponse } from "@/services/api";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { UserRole } from "@/types/governance";
+import { useRole } from "@/context/RoleContext";
 
 interface TopBarProps {
   onToggleSidebar: () => void;
@@ -22,7 +23,15 @@ export const TopBar: React.FC<TopBarProps> = ({
   activeRole = "AICTE Admin",
   onRoleChange,
 }) => {
-  const [currentRole, setCurrentRole] = useState<UserRole>(activeRole);
+  let roleContext: any = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    roleContext = useRole();
+  } catch {
+    // outside provider fallback
+  }
+
+  const effectiveRole = roleContext ? roleContext.currentRole : activeRole;
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [loadingHealth, setLoadingHealth] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -47,7 +56,9 @@ export const TopBar: React.FC<TopBarProps> = ({
   }, []);
 
   const handleRoleSelect = (role: UserRole) => {
-    setCurrentRole(role);
+    if (roleContext) {
+      roleContext.setRole(role);
+    }
     if (onRoleChange) {
       onRoleChange(role);
     }
@@ -123,7 +134,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* Quick Role Switcher */}
         <RoleSwitcher
-          currentRole={currentRole}
+          currentRole={effectiveRole}
           onRoleChange={handleRoleSelect}
         />
 
