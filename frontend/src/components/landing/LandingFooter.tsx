@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Fingerprint, ExternalLink, ShieldCheck, ArrowUpRight } from "lucide-react";
+import { Fingerprint, ExternalLink, ShieldCheck, ArrowUpRight, LogIn } from "lucide-react";
 
 export const LandingFooter: React.FC = () => {
   const scrollToWorkflow = () => {
@@ -15,38 +15,50 @@ export const LandingFooter: React.FC = () => {
   };
 
   return (
-    <footer id="security" className="border-t border-[#222f44] bg-[#080c14] px-4 pt-14 pb-8 sm:px-6 lg:px-8 text-zinc-100">
-      <div className="mx-auto max-w-7xl">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4 lg:gap-12">
-          {/* Brand Info */}
+    <footer id="security" className="relative z-20 border-t-2 border-[#2b3a54] bg-[#0c1320] text-zinc-100">
+      {/* Top Emerald Gradient Accent Line */}
+      <div className="h-1 w-full bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-90 shadow-sm shadow-emerald-400/50" />
+
+      <div className="mx-auto max-w-7xl px-4 pt-14 pb-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-4 lg:gap-14">
+          
+          {/* Brand & Purpose Info */}
           <div className="md:col-span-2">
-            <div className="flex items-center space-x-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded border border-emerald-400/50 bg-emerald-500/20 text-emerald-300 shadow-sm shadow-emerald-900/30">
-                <Fingerprint className="h-5 w-5" />
+            <div className="flex items-center space-x-3.5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg border-2 border-emerald-400 bg-emerald-500/25 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.35)]">
+                <Fingerprint className="h-6 w-6" />
               </div>
-              <span className="font-mono text-lg font-bold tracking-wider text-white uppercase">
-                CREDEN
-              </span>
+              <div className="flex flex-col">
+                <span className="font-mono text-xl font-black tracking-widest text-white uppercase">
+                  CREDEN
+                </span>
+                <span className="text-[10px] font-bold tracking-wider text-emerald-300 uppercase font-mono">
+                  National Academic Governance Platform
+                </span>
+              </div>
             </div>
-            <p className="mt-3.5 max-w-md text-sm leading-relaxed text-zinc-100 font-normal">
+
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-zinc-100 font-medium">
               National Student Data Management & Academic Verification Platform. Built to enforce AICTE academic integrity, eliminate duplicate enrollments, and verify technical education credentials in real-time.
             </p>
-            <div className="mt-4 inline-flex items-center gap-2 rounded-md border border-emerald-500/40 bg-emerald-950/40 px-3 py-1.5 text-xs font-mono font-medium text-emerald-300">
-              <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
+
+            <div className="mt-5 inline-flex items-center gap-2.5 rounded-lg border-2 border-emerald-500/70 bg-emerald-950/90 px-4 py-2 text-xs font-mono font-bold text-emerald-200 shadow-md shadow-emerald-950/60">
+              <ShieldCheck className="h-4 w-4 text-emerald-300 shrink-0" />
               <span>Standard: AICTE NEP-2020 / APAAR Architecture</span>
             </div>
           </div>
 
-          {/* Quick Platform Links */}
+          {/* Platform Navigation */}
           <div>
-            <h3 className="text-xs font-bold tracking-wider text-white uppercase">
-              Platform Navigation
+            <h3 className="text-xs font-black tracking-widest text-white uppercase flex items-center gap-2 border-b border-[#23334d] pb-2.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+              <span>Platform Navigation</span>
             </h3>
-            <ul className="mt-3.5 space-y-2.5 text-xs font-medium">
+            <ul className="mt-4 space-y-3 text-sm font-semibold">
               <li>
                 <Link
                   to="/dashboard"
-                  className="text-zinc-200 transition-colors hover:text-white hover:underline focus:outline-none focus:text-white"
+                  className="text-zinc-100 transition-colors hover:text-emerald-300 hover:underline inline-flex items-center gap-1.5"
                 >
                   Explore Dashboard
                 </Link>
@@ -54,7 +66,7 @@ export const LandingFooter: React.FC = () => {
               <li>
                 <button
                   onClick={scrollToWorkflow}
-                  className="text-zinc-200 transition-colors hover:text-white hover:underline focus:outline-none focus:text-white text-left"
+                  className="text-zinc-100 transition-colors hover:text-emerald-300 hover:underline inline-flex items-center gap-1.5 text-left cursor-pointer"
                 >
                   Workflow Architecture
                 </button>
@@ -62,62 +74,76 @@ export const LandingFooter: React.FC = () => {
               <li>
                 <Link
                   to="/dashboard?demo=true"
-                  className="inline-flex items-center gap-1.5 font-semibold text-emerald-300 transition-colors hover:text-emerald-200 focus:outline-none focus:text-emerald-200"
+                  className="inline-flex items-center gap-1.5 font-bold text-emerald-300 transition-colors hover:text-emerald-200 bg-emerald-950/60 border border-emerald-500/50 px-3 py-1.5 rounded-md shadow-sm"
                 >
                   <span>Interactive Demo Mode</span>
-                  <ArrowUpRight className="h-3.5 w-3.5" />
+                  <ArrowUpRight className="h-4 w-4" />
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/login"
+                  className="text-zinc-100 transition-colors hover:text-emerald-300 hover:underline inline-flex items-center gap-1.5"
+                >
+                  <LogIn className="h-4 w-4 text-emerald-400" />
+                  <span>Terminal Sign In</span>
                 </Link>
               </li>
               <li>
                 <button
                   onClick={scrollToTop}
-                  className="text-zinc-200 transition-colors hover:text-white hover:underline focus:outline-none focus:text-white text-left"
+                  className="text-zinc-200 transition-colors hover:text-white inline-flex items-center gap-1 text-left cursor-pointer"
                 >
-                  Back to Top
+                  <span>Back to Top</span>
+                  <span>↑</span>
                 </button>
               </li>
             </ul>
           </div>
 
-          {/* Regulatory & Specifications */}
+          {/* Technical Specifications */}
           <div>
-            <h3 className="text-xs font-bold tracking-wider text-white uppercase">
-              Technical Specs
+            <h3 className="text-xs font-black tracking-widest text-white uppercase flex items-center gap-2 border-b border-[#23334d] pb-2.5">
+              <span className="h-2 w-2 rounded-full bg-sky-400"></span>
+              <span>Technical Specs</span>
             </h3>
-            <ul className="mt-3.5 space-y-2.5 text-xs font-mono">
-              <li className="flex items-center gap-1.5">
-                <span className="text-zinc-400">Hashing:</span>
-                <span className="font-semibold text-zinc-100">SHA-256 Digest</span>
+            <ul className="mt-4 space-y-2.5 font-mono text-xs">
+              <li className="flex items-center justify-between rounded-md border border-[#253650] bg-[#101726] px-3 py-2">
+                <span className="text-zinc-300 font-semibold">Hashing:</span>
+                <span className="font-bold text-emerald-300 bg-[#172236] px-2 py-0.5 rounded border border-[#2b3c58]">SHA-256 Digest</span>
               </li>
-              <li className="flex items-center gap-1.5">
-                <span className="text-zinc-400">Identifier:</span>
-                <span className="font-semibold text-zinc-100">12-Digit APAAR</span>
+              <li className="flex items-center justify-between rounded-md border border-[#253650] bg-[#101726] px-3 py-2">
+                <span className="text-zinc-300 font-semibold">Identifier:</span>
+                <span className="font-bold text-emerald-300 bg-[#172236] px-2 py-0.5 rounded border border-[#2b3c58]">12-Digit APAAR</span>
               </li>
-              <li className="flex items-center gap-1.5">
-                <span className="text-zinc-400">Sync Protocol:</span>
-                <span className="font-semibold text-zinc-100">REST / TLS 1.3</span>
+              <li className="flex items-center justify-between rounded-md border border-[#253650] bg-[#101726] px-3 py-2">
+                <span className="text-zinc-300 font-semibold">Sync Protocol:</span>
+                <span className="font-bold text-emerald-300 bg-[#172236] px-2 py-0.5 rounded border border-[#2b3c58]">REST / TLS 1.3</span>
               </li>
-              <li className="pt-1 font-sans">
+              <li className="pt-2 font-sans">
                 <a
                   href="/docs"
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 font-semibold text-emerald-300 hover:text-emerald-200 transition-colors"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-emerald-500/60 bg-emerald-950/80 px-3.5 py-2.5 text-xs font-bold text-emerald-200 hover:bg-emerald-900/80 hover:text-white transition-all shadow-sm"
                 >
                   <span>Backend OpenAPI Docs</span>
-                  <ExternalLink className="h-3.5 w-3.5" />
+                  <ExternalLink className="h-4 w-4" />
                 </a>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom copyright */}
-        <div className="mt-12 flex flex-col items-center justify-between border-t border-[#1e2a3d] pt-6 text-xs text-zinc-300 sm:flex-row">
-          <p className="font-medium text-zinc-200">© 2026 CREDEN. All India Council for Technical Education (AICTE).</p>
-          <p className="mt-2 font-mono sm:mt-0 text-zinc-300">
-            Interactive Prototype Environment • Node DEL-01
+        {/* Bottom copyright & node badge */}
+        <div className="mt-12 flex flex-col items-center justify-between border-t-2 border-[#1f2d45] pt-6 sm:flex-row gap-4">
+          <p className="font-bold text-zinc-100 text-xs sm:text-sm text-center sm:text-left">
+            © 2026 CREDEN. All India Council for Technical Education (AICTE).
           </p>
+          <div className="flex items-center gap-2 rounded-full border border-[#283957] bg-[#101726] px-3.5 py-1 text-xs font-mono font-bold text-zinc-100 shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Node DEL-01 (Active Production Prototype)</span>
+          </div>
         </div>
       </div>
     </footer>
