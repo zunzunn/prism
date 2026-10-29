@@ -9,9 +9,7 @@ import { STATE_LIST, ACADEMIC_YEARS } from "@/data/governanceData";
 import { fetchInstitutions } from "@/services/institutionService";
 import { formatDateTime } from "@/lib/utils";
 import {
-  Building2,
   Search,
-  Filter,
   CheckCircle2,
   AlertTriangle,
   Clock,

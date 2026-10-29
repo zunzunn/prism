@@ -2,10 +2,12 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppShell } from "@/layouts/AppShell";
 import { LandingPage } from "@/pages/LandingPage";
 import { DashboardPage } from "@/pages/DashboardPage";
+import { InstitutionsListPage } from "@/pages/InstitutionsListPage";
+import { InstitutionDetailPage } from "@/pages/InstitutionDetailPage";
+import { StudentsListPage } from "@/pages/StudentsListPage";
+import { StudentDetailPage } from "@/pages/StudentDetailPage";
 import { PlaceholderModulePage } from "@/pages/PlaceholderModulePage";
 import {
-  Users,
-  Building2,
   SearchCheck,
   FileCheck2,
   ShieldAlert,
@@ -33,25 +35,19 @@ export const router = createBrowserRouter([
       },
       {
         path: "institutions",
-        element: (
-          <PlaceholderModulePage
-            title="Technical Institutions"
-            subtitle="AICTE accredited colleges, autonomous institutions, and deemed engineering universities"
-            icon={Building2}
-            badge="3,824 Institutes"
-          />
-        ),
+        element: <InstitutionsListPage />,
+      },
+      {
+        path: "institutions/:id",
+        element: <InstitutionDetailPage />,
       },
       {
         path: "students",
-        element: (
-          <PlaceholderModulePage
-            title="Student Records & APAAR Identity Registry"
-            subtitle="National student registry database with automated APAAR ID mapping and credential ledger"
-            icon={Users}
-            badge="1.4M Records"
-          />
-        ),
+        element: <StudentsListPage />,
+      },
+      {
+        path: "students/:id",
+        element: <StudentDetailPage />,
       },
       {
         path: "validation",
