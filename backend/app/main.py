@@ -15,14 +15,15 @@ app = FastAPI(
 )
 
 # CORS configuration
-if settings.BACKEND_CORS_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+origins = [str(origin) for origin in settings.BACKEND_CORS_ORIGINS] if settings.BACKEND_CORS_ORIGINS else []
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_origin_regex=r"^https:\/\/.*\.vercel\.app$",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Mount endpoints under /api
 app.include_router(health_router, prefix="/api")
@@ -38,3 +39,10 @@ def root_status():
         "docs": "/docs",
         "health": "/api/health",
     }
+
+
+@app.get("/openapi.json", include_in_schema=False)
+def openapi_alias():
+    from fastapi.responses import RedirectResponse
+
+    return RedirectResponse(url=f"{settings.API_V1_STR}/openapi.json")

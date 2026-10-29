@@ -96,7 +96,7 @@ export const LandingFooter: React.FC = () => {
               </li>
               <li>
                 <a
-                  href="http://localhost:8000/docs"
+                  href="/docs"
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1 text-zinc-300 hover:text-zinc-100"

@@ -8,7 +8,7 @@ import {
   Cpu,
   RefreshCw,
 } from "lucide-react";
-import { checkBackendHealth, HealthResponse } from "@/services/api";
+import { checkBackendHealth, HealthResponse, API_BASE_URL } from "@/services/api";
 
 export const SettingsPage: React.FC = () => {
   const [health, setHealth] = useState<HealthResponse | null>(null);
@@ -94,7 +94,9 @@ export const SettingsPage: React.FC = () => {
           <div className="space-y-2.5 text-xs font-mono">
             <div className="flex justify-between py-1 border-b border-[#121822]">
               <span className="text-zinc-400">Connection URL:</span>
-              <span className="text-zinc-200">http://localhost:8000</span>
+              <span className="text-zinc-200">
+                {API_BASE_URL || (typeof window !== "undefined" ? `${window.location.origin}/api` : "http://localhost:8000")}
+              </span>
             </div>
             <div className="flex justify-between py-1 border-b border-[#121822]">
               <span className="text-zinc-400">Gateway Status:</span>
@@ -108,7 +110,7 @@ export const SettingsPage: React.FC = () => {
             </div>
             <div className="flex justify-between py-1">
               <span className="text-zinc-400">CORS Origins Allowed:</span>
-              <span className="text-zinc-300">http://localhost:5173</span>
+              <span className="text-zinc-300">Vercel Deployment Domains (*.vercel.app) & Localhost</span>
             </div>
           </div>
         </div>
