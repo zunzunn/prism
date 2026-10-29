@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "test": "npx tsx scripts/test-validation.js && npx tsx scripts/test-validation-engine.js",
+    "test": "npx tsx scripts/test-validation.js && npx tsx scripts/test-validation-engine.js && npx tsx scripts/test-intake-and-reports.js",
     "preview": "vite preview"
   },
   "dependencies": {

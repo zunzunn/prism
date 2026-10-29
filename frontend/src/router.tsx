@@ -8,14 +8,14 @@ import { StudentsListPage } from "@/pages/StudentsListPage";
 import { StudentDetailPage } from "@/pages/StudentDetailPage";
 import { ValidationCenterPage } from "@/pages/ValidationCenterPage";
 import { ValidationDetailPage } from "@/pages/ValidationDetailPage";
+import { IntakeMonitoringPage } from "@/pages/IntakeMonitoringPage";
+import { AnalyticsForecastPage } from "@/pages/AnalyticsForecastPage";
+import { ReportsPage } from "@/pages/ReportsPage";
 import { PlaceholderModulePage } from "@/pages/PlaceholderModulePage";
 import {
   SearchCheck,
   ShieldAlert,
   Settings,
-  Scale,
-  BarChart2,
-  FileText,
   BookOpen,
 } from "lucide-react";
 
@@ -60,14 +60,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "intake",
-        element: (
-          <PlaceholderModulePage
-            title="Intake Monitoring & Sanctioned Capacity"
-            subtitle="Real-time institutional admission tracking against approved AICTE quota caps"
-            icon={Scale}
-            badge="Capacity Oversight"
-          />
-        ),
+        element: <IntakeMonitoringPage />,
       },
       {
         path: "verification",
@@ -82,23 +75,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "analytics",
-        element: (
-          <PlaceholderModulePage
-            title="Analytics & Forecast"
-            subtitle="Predictive admissions trends, graduation rates, and national capacity projections"
-            icon={BarChart2}
-          />
-        ),
+        element: <AnalyticsForecastPage />,
       },
       {
         path: "reports",
-        element: (
-          <PlaceholderModulePage
-            title="Governance Reports"
-            subtitle="Downloadable state-wise compliance reports, executive digests, and accreditation statistics"
-            icon={FileText}
-          />
-        ),
+        element: <ReportsPage />,
       },
       {
         path: "compliance",
