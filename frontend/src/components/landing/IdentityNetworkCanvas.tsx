@@ -279,7 +279,7 @@ export const IdentityNetworkCanvas: React.FC = () => {
 
       if (!isVisible) return;
 
-      const delta = clock.getDelta();
+      clock.getDelta();
 
       if (!prefersReducedMotion) {
         // Slow subtle rotation
