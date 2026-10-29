@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.health import router as health_router
+from app.api.verification import router as verification_router
 from app.core.config import settings
 
 app = FastAPI(
@@ -24,6 +25,7 @@ if settings.BACKEND_CORS_ORIGINS:
 
 # Mount health endpoint under /api
 app.include_router(health_router, prefix="/api")
+app.include_router(verification_router, prefix="/api")
 
 
 @app.get("/", tags=["Root"])
