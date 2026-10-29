@@ -13,6 +13,10 @@ export function formatDateTime(dateStr: string | Date): string {
   }).format(d);
 }
 
+export function formatNumber(num: number): string {
+  return new Intl.NumberFormat("en-IN").format(num);
+}
+
 export function truncateHash(hash: string, lead = 8, trail = 6): string {
   if (!hash || hash.length <= lead + trail) return hash;
   return `${hash.slice(0, lead)}...${hash.slice(-trail)}`;
