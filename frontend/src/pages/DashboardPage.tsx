@@ -1,4 +1,5 @@
 import React from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import { SystemStatusBanner } from "@/components/dashboard/SystemStatusBanner";
 import { MetricsGrid } from "@/components/dashboard/MetricsGrid";
 import { RecentVerificationsTable } from "@/components/dashboard/RecentVerificationsTable";
@@ -8,11 +9,40 @@ import {
   UploadCloud,
   ArrowRight,
   ShieldAlert,
+  Sparkles,
+  X,
 } from "lucide-react";
 
 export const DashboardPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isDemo = searchParams.get("demo") === "true";
+
+  const dismissDemo = () => {
+    searchParams.delete("demo");
+    setSearchParams(searchParams);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Interactive Demonstration Banner when demo=true */}
+      {isDemo && (
+        <div className="flex items-center justify-between rounded border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-300">
+          <div className="flex items-center gap-2.5">
+            <Sparkles className="h-4 w-4 shrink-0 text-emerald-400" />
+            <span>
+              <strong className="font-semibold text-emerald-200">Interactive Demo Active:</strong> You are exploring CREDEN with simulated AICTE institutional datasets, pre-verified APAAR IDs, and anomaly logs.
+            </span>
+          </div>
+          <button
+            onClick={dismissDemo}
+            aria-label="Dismiss demo banner"
+            className="rounded p-1 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-200 transition"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Top Protocol Status Banner */}
       <SystemStatusBanner />
 
@@ -35,10 +65,13 @@ export const DashboardPage: React.FC = () => {
               </p>
             </div>
           </div>
-          <button className="mt-3.5 flex items-center justify-between border-t border-[#161c28] pt-2.5 text-xs font-medium text-emerald-400 transition hover:text-emerald-300">
+          <Link
+            to="/verification"
+            className="mt-3.5 flex items-center justify-between border-t border-[#161c28] pt-2.5 text-xs font-medium text-emerald-400 transition hover:text-emerald-300"
+          >
             <span>Launch Verifier</span>
             <ArrowRight className="h-3.5 w-3.5" />
-          </button>
+          </Link>
         </div>
 
         <div className="flex flex-col justify-between rounded border border-[#1b2333] bg-[#0c1017] p-4 transition hover:border-[#28364e]">
@@ -55,10 +88,13 @@ export const DashboardPage: React.FC = () => {
               </p>
             </div>
           </div>
-          <button className="mt-3.5 flex items-center justify-between border-t border-[#161c28] pt-2.5 text-xs font-medium text-zinc-300 transition hover:text-white">
+          <Link
+            to="/validation"
+            className="mt-3.5 flex items-center justify-between border-t border-[#161c28] pt-2.5 text-xs font-medium text-zinc-300 transition hover:text-white"
+          >
             <span>Upload Dataset</span>
             <ArrowRight className="h-3.5 w-3.5" />
-          </button>
+          </Link>
         </div>
 
         <div className="flex flex-col justify-between rounded border border-[#1b2333] bg-[#0c1017] p-4 transition hover:border-[#28364e]">
@@ -75,10 +111,13 @@ export const DashboardPage: React.FC = () => {
               </p>
             </div>
           </div>
-          <button className="mt-3.5 flex items-center justify-between border-t border-[#161c28] pt-2.5 text-xs font-medium text-rose-400 transition hover:text-rose-300">
+          <Link
+            to="/compliance"
+            className="mt-3.5 flex items-center justify-between border-t border-[#161c28] pt-2.5 text-xs font-medium text-rose-400 transition hover:text-rose-300"
+          >
             <span>Review Flags</span>
             <ArrowRight className="h-3.5 w-3.5" />
-          </button>
+          </Link>
         </div>
       </div>
 

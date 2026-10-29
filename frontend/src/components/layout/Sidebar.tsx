@@ -21,7 +21,7 @@ interface SidebarProps {
 const navItems = [
   {
     name: "Dashboard",
-    path: "/",
+    path: "/dashboard",
     icon: LayoutDashboard,
     badge: undefined,
   },

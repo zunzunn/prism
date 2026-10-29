@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppShell } from "@/layouts/AppShell";
+import { LandingPage } from "@/pages/LandingPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { PlaceholderModulePage } from "@/pages/PlaceholderModulePage";
 import {
@@ -13,12 +14,18 @@ import {
 } from "lucide-react";
 
 export const router = createBrowserRouter([
+  // Public Landing Page
   {
     path: "/",
+    element: <LandingPage />,
+  },
+
+  // Authenticated/Internal Application Shell
+  {
     element: <AppShell />,
     children: [
       {
-        index: true,
+        path: "dashboard",
         element: <DashboardPage />,
       },
       {
