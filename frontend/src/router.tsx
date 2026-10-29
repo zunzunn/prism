@@ -11,9 +11,11 @@ import { ValidationDetailPage } from "@/pages/ValidationDetailPage";
 import { IntakeMonitoringPage } from "@/pages/IntakeMonitoringPage";
 import { AnalyticsForecastPage } from "@/pages/AnalyticsForecastPage";
 import { ReportsPage } from "@/pages/ReportsPage";
+import { VerificationPage } from "@/pages/VerificationPage";
+import { VerifyReferencePage } from "@/pages/VerifyReferencePage";
+import { StudentPortalPage } from "@/pages/StudentPortalPage";
 import { PlaceholderModulePage } from "@/pages/PlaceholderModulePage";
 import {
-  SearchCheck,
   ShieldAlert,
   Settings,
   BookOpen,
@@ -64,14 +66,15 @@ export const router = createBrowserRouter([
       },
       {
         path: "verification",
-        element: (
-          <PlaceholderModulePage
-            title="Academic Verification Engine"
-            subtitle="Real-time verification of transcripts, marksheets, and degree certificates via cryptographic hash proofs"
-            icon={SearchCheck}
-            badge="AICTE Live"
-          />
-        ),
+        element: <VerificationPage />,
+      },
+      {
+        path: "verify/:reference",
+        element: <VerifyReferencePage />,
+      },
+      {
+        path: "student",
+        element: <StudentPortalPage />,
       },
       {
         path: "analytics",

@@ -80,6 +80,12 @@ const mainNavItems = [
 
 const secondaryNavItems = [
   {
+    name: "Student Portal",
+    path: "/student",
+    icon: Fingerprint,
+    badge: "QR Pass",
+  },
+  {
     name: "Settings",
     path: "/settings",
     icon: Settings,
