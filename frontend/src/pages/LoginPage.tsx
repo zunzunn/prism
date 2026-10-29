@@ -103,8 +103,14 @@ export const LoginPage: React.FC = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-        <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      <main className="relative flex-1 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Ambient backlight glow */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/3 left-1/3 h-80 w-80 rounded-full bg-emerald-500/10 blur-[120px]" />
+          <div className="absolute bottom-1/4 right-1/4 h-80 w-80 rounded-full bg-sky-500/10 blur-[130px]" />
+        </div>
+
+        <div className="relative z-10 w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           
           {/* Left Column: Context & 1-Click Demo Profiles */}
           <div className="lg:col-span-5 space-y-6">
@@ -219,8 +225,8 @@ export const LoginPage: React.FC = () => {
 
           {/* Right Column: Credentials Form */}
           <div className="lg:col-span-7">
-            <div className="rounded-xl border border-[#1f293d] bg-[#0a0e17] p-6 sm:p-8 shadow-2xl shadow-black/80">
-              <div className="flex items-center justify-between border-b border-[#1b2333] pb-4">
+            <div className="rounded-2xl border border-white/10 bg-[#0c1424]/75 p-6 sm:p-8 backdrop-blur-2xl shadow-[0_25px_60px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.15)]">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div>
                   <h2 className="text-base font-bold text-white">Terminal Authentication</h2>
                   <p className="text-xs text-zinc-300">Enter access parameters or choose a role above.</p>

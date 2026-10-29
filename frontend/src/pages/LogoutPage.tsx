@@ -75,9 +75,14 @@ export const LogoutPage: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-4 py-12 sm:px-6">
-        <div className="w-full max-w-lg">
-          <div className="rounded-xl border border-[#1f293d] bg-[#0a0e17] p-8 shadow-2xl shadow-black/80 text-center">
+      <main className="relative flex-1 flex items-center justify-center px-4 py-12 sm:px-6 overflow-hidden">
+        {/* Ambient backlight glow */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/3 left-1/3 h-80 w-80 rounded-full bg-emerald-500/10 blur-[120px]" />
+        </div>
+
+        <div className="relative z-10 w-full max-w-lg">
+          <div className="rounded-2xl border border-white/10 bg-[#0c1424]/75 p-8 backdrop-blur-2xl shadow-[0_25px_60px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.15)] text-center">
             {/* Status Icon */}
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 shadow-lg shadow-emerald-950/50">
               <ShieldCheck className="h-8 w-8 text-emerald-400" />

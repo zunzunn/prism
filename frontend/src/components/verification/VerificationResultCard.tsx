@@ -9,6 +9,7 @@ import {
   Lock,
   Download,
 } from "lucide-react";
+import { GlassCard } from "@/components/ui/glass-card";
 
 interface VerificationResultCardProps {
   result: VerificationResult;
@@ -25,7 +26,16 @@ export const VerificationResultCard: React.FC<VerificationResultCardProps> = ({
   const isInvalid = result.status === "Invalid / Revoked";
 
   return (
-    <div className="rounded border border-[#182130] bg-[#0c1017] p-5 space-y-5">
+    <GlassCard
+      className="border border-white/10 shadow-2xl transition-all"
+      tint="rgba(11, 16, 26, 0.75)"
+      blur={18}
+      radius={24}
+      rimWidth={12}
+      specular={true}
+      interactive={true}
+    >
+      <div className="space-y-5">
       {/* Status Header Banner */}
       <div
         className={`rounded border p-4 text-xs ${
@@ -166,6 +176,7 @@ export const VerificationResultCard: React.FC<VerificationResultCardProps> = ({
           <span>Download Verification Receipt</span>
         </button>
       </div>
-    </div>
+      </div>
+    </GlassCard>
   );
 };

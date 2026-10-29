@@ -25,7 +25,9 @@ import {
   Lock,
   ArrowRight,
   RefreshCw,
+  FolderOpen,
 } from "lucide-react";
+import { GlassFolder } from "@/components/ui/glass-folder-cards";
 
 const LIFECYCLE_STAGES: StudentLifecycleStage[] = [
   "Institution-submitted",
@@ -507,6 +509,40 @@ export const StudentPortalPage: React.FC = () => {
                     <span>Inspect Public Gateway View</span>
                     <ExternalLink className="h-3 w-3 text-emerald-400" />
                   </Link>
+                </div>
+              </div>
+
+              {/* Glassmorphic Digital Credential Dossier Folder */}
+              <div className="rounded-xl border border-white/10 bg-[#0d1424]/70 p-5 shadow-2xl backdrop-blur-xl space-y-4">
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-2">
+                    <FolderOpen className="h-4 w-4 text-emerald-400" />
+                    <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                      Academic Glass Dossier
+                    </span>
+                  </div>
+                  <span className="rounded border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-mono text-emerald-300">
+                    Live Folder
+                  </span>
+                </div>
+                <p className="text-[11px] text-zinc-300 leading-relaxed">
+                  Interactive frosted-glass archive. Click to fan out validated transcripts, degree records, and APAAR ledger sheets.
+                </p>
+                <div className="flex justify-center pt-2 overflow-visible">
+                  <GlassFolder
+                    label={`${student.fullName.split(" ")[0]}'s Pass`}
+                    meta={`${student.degreeLevel} · AY ${student.academicYear}`}
+                    art="aurora"
+                    seed={7}
+                    tone="dark"
+                    width={300}
+                    files={[
+                      { name: "Provisional Degree.pdf", meta: "SHA-256 Validated", art: "aurora" },
+                      { name: "Cumulative Transcripts", meta: "Semesters I-VIII", art: "glacier" },
+                      { name: "APAAR ABC Identity Card", meta: student.maskedApaarId },
+                      { name: "Intake Sanction Quota", meta: `Admitted: ${student.admissionDate}` },
+                    ]}
+                  />
                 </div>
               </div>
             </div>

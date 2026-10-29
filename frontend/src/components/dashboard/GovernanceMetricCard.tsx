@@ -57,7 +57,7 @@ export const GovernanceMetricCard: React.FC<GovernanceMetricCardProps> = ({
   return (
     <Link
       to={card.targetRoute}
-      className={`group relative flex flex-col justify-between rounded border border-[#182130] bg-[#0c1017] p-4 transition-all duration-200 hover:bg-[#0f141f] ${styles.hoverBorder} focus:outline-none focus:ring-1 focus:ring-zinc-600`}
+      className={`group relative flex flex-col justify-between rounded-xl border border-white/10 bg-[#0d1424]/65 p-4 backdrop-blur-xl shadow-[0_10px_25px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.12)] transition-all duration-300 hover:bg-[#121b30]/80 hover:border-white/25 hover:shadow-[0_16px_36px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.2)] ${styles.hoverBorder} focus:outline-none focus:ring-1 focus:ring-emerald-500/50`}
     >
       {/* Top Header */}
       <div className="flex items-start justify-between">
