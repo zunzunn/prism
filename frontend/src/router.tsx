@@ -6,10 +6,11 @@ import { InstitutionsListPage } from "@/pages/InstitutionsListPage";
 import { InstitutionDetailPage } from "@/pages/InstitutionDetailPage";
 import { StudentsListPage } from "@/pages/StudentsListPage";
 import { StudentDetailPage } from "@/pages/StudentDetailPage";
+import { ValidationCenterPage } from "@/pages/ValidationCenterPage";
+import { ValidationDetailPage } from "@/pages/ValidationDetailPage";
 import { PlaceholderModulePage } from "@/pages/PlaceholderModulePage";
 import {
   SearchCheck,
-  FileCheck2,
   ShieldAlert,
   Settings,
   Scale,
@@ -51,13 +52,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "validation",
-        element: (
-          <PlaceholderModulePage
-            title="Validation Center"
-            subtitle="High-throughput institutional CSV/JSON dataset validator with automated duplicate & anomaly checks"
-            icon={FileCheck2}
-          />
-        ),
+        element: <ValidationCenterPage />,
+      },
+      {
+        path: "validation/:id",
+        element: <ValidationDetailPage />,
       },
       {
         path: "intake",
