@@ -135,17 +135,17 @@ export const StudentsListPage: React.FC = () => {
   return (
     <div className="space-y-6 pb-14">
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-[#182130] pb-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-5">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
               National Student Registry & APAAR Records
             </h1>
-            <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-mono text-emerald-400">
+            <span className="rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-mono text-emerald-300 font-bold">
               {total} Verified Students
             </span>
           </div>
-          <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
+          <p className="mt-1 text-xs text-zinc-300 sm:text-sm">
             National student enrollment ledger with masked APAAR identifiers, category audits, and tamper-evident hashes.
           </p>
         </div>
@@ -153,7 +153,7 @@ export const StudentsListPage: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setIsCsvModalOpen(true)}
-            className="flex items-center gap-2 rounded border border-emerald-500/40 bg-emerald-500/15 px-3.5 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/25"
+            className="flex items-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-500/15 px-4 py-2.5 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/25 cursor-pointer backdrop-blur-md shadow-md shadow-emerald-950/40"
           >
             <UploadCloud className="h-4 w-4" />
             <span>Import Student CSV</span>
@@ -162,14 +162,14 @@ export const StudentsListPage: React.FC = () => {
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="rounded border border-[#182130] bg-[#0c1017] p-4 space-y-3">
+      <div className="rounded-2xl border border-white/10 bg-[#0c1424]/75 p-5 space-y-3 backdrop-blur-xl shadow-xl">
         {effectiveInst && (
-          <div className="flex items-center justify-between rounded border border-sky-500/30 bg-sky-500/10 px-3 py-1.5 text-xs text-sky-300 font-mono">
+          <div className="flex items-center justify-between rounded-xl border border-sky-400/30 bg-sky-500/10 px-3.5 py-2 text-xs text-sky-200 font-mono backdrop-blur-md">
             <div className="flex items-center gap-2">
-              <Building className="h-3.5 w-3.5" />
+              <Building className="h-3.5 w-3.5 text-sky-400" />
               <span>Active Scope: {effectiveInst === "1-332901124" || effectiveInst === "COEP" ? "College of Engineering Pune (COEP) [1-332901124]" : effectiveInst}</span>
             </div>
-            <span className="text-[10px] text-sky-400 bg-sky-500/20 px-1.5 py-0.5 rounded">Scoped View</span>
+            <span className="text-[10px] text-sky-300 bg-sky-500/20 px-2 py-0.5 rounded-full font-bold">Scoped View</span>
           </div>
         )}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -184,7 +184,7 @@ export const StudentsListPage: React.FC = () => {
                 setPage(1);
               }}
               placeholder="Search by student name, Roll No, college, or APAAR..."
-              className="w-full rounded border border-[#1b2333] bg-[#090d14] py-1.5 pr-3 pl-8.5 font-mono text-xs text-zinc-200 placeholder-zinc-400 transition focus:border-emerald-500/50 focus:outline-none"
+              className="w-full rounded-xl border border-white/15 bg-white/[0.04] py-2 pr-3 pl-9 font-mono text-xs text-white placeholder-zinc-400 transition focus:border-emerald-500/60 focus:bg-white/[0.08] focus:outline-none backdrop-blur-md"
             />
           </div>
 
@@ -196,12 +196,12 @@ export const StudentsListPage: React.FC = () => {
                 setSelectedYear(e.target.value as AcademicYear | "All");
                 setPage(1);
               }}
-              className="w-full rounded border border-[#1b2333] bg-[#090d14] py-1.5 px-3 font-mono text-xs text-zinc-300 focus:border-emerald-500/50 focus:outline-none"
+              className="w-full rounded-xl border border-white/15 bg-white/[0.04] py-2 px-3 font-mono text-xs text-zinc-200 focus:border-emerald-500/60 focus:bg-[#0b101c] focus:outline-none backdrop-blur-md"
               aria-label="Filter by Academic Year"
             >
-              <option value="All">All Academic Years</option>
+              <option value="All" className="bg-[#0b101c]">All Academic Years</option>
               {ACADEMIC_YEARS.map((yr) => (
-                <option key={yr} value={yr}>
+                <option key={yr} value={yr} className="bg-[#0b101c]">
                   AY {yr}
                 </option>
               ))}
@@ -216,15 +216,15 @@ export const StudentsListPage: React.FC = () => {
                 setSelectedCategory(e.target.value as AdmissionCategory | "All");
                 setPage(1);
               }}
-              className="w-full rounded border border-[#1b2333] bg-[#090d14] py-1.5 px-3 font-mono text-xs text-zinc-300 focus:border-emerald-500/50 focus:outline-none"
+              className="w-full rounded-xl border border-white/15 bg-white/[0.04] py-2 px-3 font-mono text-xs text-zinc-200 focus:border-emerald-500/60 focus:bg-[#0b101c] focus:outline-none backdrop-blur-md"
               aria-label="Filter by Admission Category"
             >
-              <option value="All">All Categories</option>
-              <option value="General / Open">General / Open</option>
-              <option value="OBC-NCL">OBC-NCL</option>
-              <option value="SC">SC</option>
-              <option value="ST">ST</option>
-              <option value="EWS">EWS</option>
+              <option value="All" className="bg-[#0b101c]">All Categories</option>
+              <option value="General / Open" className="bg-[#0b101c]">General / Open</option>
+              <option value="OBC-NCL" className="bg-[#0b101c]">OBC-NCL</option>
+              <option value="SC" className="bg-[#0b101c]">SC</option>
+              <option value="ST" className="bg-[#0b101c]">ST</option>
+              <option value="EWS" className="bg-[#0b101c]">EWS</option>
             </select>
           </div>
 
@@ -236,20 +236,20 @@ export const StudentsListPage: React.FC = () => {
                 setSelectedStatus(e.target.value as StudentValidationStatus | "All");
                 setPage(1);
               }}
-              className="w-full rounded border border-[#1b2333] bg-[#090d14] py-1.5 px-3 font-mono text-xs text-zinc-300 focus:border-emerald-500/50 focus:outline-none"
+              className="w-full rounded-xl border border-white/15 bg-white/[0.04] py-2 px-3 font-mono text-xs text-zinc-200 focus:border-emerald-500/60 focus:bg-[#0b101c] focus:outline-none backdrop-blur-md"
               aria-label="Filter by Validation Status"
             >
-              <option value="All">All Statuses</option>
-              <option value="Verified">Verified</option>
-              <option value="Pending Validation">Pending Validation</option>
-              <option value="Flagged Duplicate">Flagged Duplicate</option>
-              <option value="Intake Over-Quota">Intake Over-Quota</option>
+              <option value="All" className="bg-[#0b101c]">All Statuses</option>
+              <option value="Verified" className="bg-[#0b101c]">Verified</option>
+              <option value="Pending Validation" className="bg-[#0b101c]">Pending Validation</option>
+              <option value="Flagged Duplicate" className="bg-[#0b101c]">Flagged Duplicate</option>
+              <option value="Intake Over-Quota" className="bg-[#0b101c]">Intake Over-Quota</option>
             </select>
           </div>
         </div>
 
         {/* Sorting Controls */}
-        <div className="flex flex-wrap items-center justify-between border-t border-[#161c28] pt-3 text-xs gap-2">
+        <div className="flex flex-wrap items-center justify-between border-t border-white/10 pt-3 text-xs gap-2">
           <div className="flex items-center space-x-2">
             <span className="text-zinc-400 font-mono text-[11px]">Sort By:</span>
             <select
@@ -264,19 +264,19 @@ export const StudentsListPage: React.FC = () => {
                 );
                 setPage(1);
               }}
-              className="rounded border border-[#1b2333] bg-[#090d14] py-1 px-2.5 font-mono text-xs text-zinc-300 focus:border-emerald-500/50 focus:outline-none"
+              className="rounded-xl border border-white/15 bg-white/[0.04] py-1 px-2.5 font-mono text-xs text-zinc-200 focus:border-emerald-500/60 focus:bg-[#0b101c] focus:outline-none backdrop-blur-md"
             >
-              <option value="fullName">Student Full Name</option>
-              <option value="admissionDate">Admission Date</option>
-              <option value="institutionName">Institution Name</option>
-              <option value="validationStatus">Validation Status</option>
+              <option value="fullName" className="bg-[#0b101c]">Student Full Name</option>
+              <option value="admissionDate" className="bg-[#0b101c]">Admission Date</option>
+              <option value="institutionName" className="bg-[#0b101c]">Institution Name</option>
+              <option value="validationStatus" className="bg-[#0b101c]">Validation Status</option>
             </select>
             <button
               onClick={() => {
                 setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
                 setPage(1);
               }}
-              className="rounded border border-[#1b2333] bg-[#090d14] py-1 px-2 font-mono text-xs text-zinc-300 hover:text-white"
+              className="rounded-xl border border-white/15 bg-white/[0.04] py-1 px-2.5 font-mono text-xs text-zinc-300 hover:text-white cursor-pointer backdrop-blur-md"
             >
               Order: {sortOrder.toUpperCase()}
             </button>
@@ -289,20 +289,20 @@ export const StudentsListPage: React.FC = () => {
 
         {/* Bulk Action Bar when items selected */}
         {selectedIds.length > 0 && (
-          <div className="flex items-center justify-between rounded border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2 text-xs text-emerald-300">
-            <span className="font-medium">
+          <div className="flex items-center justify-between rounded-xl border border-emerald-500/40 bg-emerald-500/15 px-4 py-2.5 text-xs text-emerald-200 backdrop-blur-md shadow-md">
+            <span className="font-semibold">
               {selectedIds.length} students selected for bulk operation
             </span>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleBulkBatchValidate}
-                className="rounded border border-emerald-500/40 bg-emerald-500/20 px-3 py-1 font-semibold hover:bg-emerald-500/30 transition"
+                className="rounded-lg border border-emerald-400/50 bg-emerald-500/25 px-3 py-1 font-semibold text-emerald-100 hover:bg-emerald-500/35 transition cursor-pointer"
               >
                 Re-Validate Batch
               </button>
               <button
                 onClick={() => setSelectedIds([])}
-                className="text-xs text-zinc-400 hover:text-white"
+                className="text-xs text-zinc-400 hover:text-white cursor-pointer px-2"
               >
                 Clear Selection
               </button>
@@ -312,16 +312,16 @@ export const StudentsListPage: React.FC = () => {
       </div>
 
       {/* Main Student Records Table */}
-      <div className="rounded border border-[#182130] bg-[#0c1017]">
+      <div className="rounded-2xl border border-white/10 bg-[#0c1424]/75 overflow-hidden backdrop-blur-xl shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-[#161c28] bg-[#080b11] text-[10px] font-mono font-semibold tracking-wider text-zinc-400 uppercase">
+            <thead className="border-b border-white/10 bg-white/[0.03] text-[10px] font-mono font-semibold tracking-wider text-zinc-400 uppercase">
               <tr>
-                <th className="py-2.5 pr-2 pl-4 sm:pl-5 w-8">
+                <th className="py-3 pr-2 pl-4 sm:pl-5 w-8">
                   <button
                     onClick={handleToggleSelectAll}
                     aria-label="Select all rows"
-                    className="text-zinc-400 hover:text-zinc-200"
+                    className="text-zinc-400 hover:text-zinc-200 cursor-pointer"
                   >
                     {selectedIds.length === students.length &&
                     students.length > 0 ? (
@@ -331,17 +331,17 @@ export const StudentsListPage: React.FC = () => {
                     )}
                   </button>
                 </th>
-                <th className="px-3 py-2.5">Masked APAAR / Student ID</th>
-                <th className="px-3 py-2.5">Student Name</th>
-                <th className="px-3 py-2.5">Institution & State</th>
-                <th className="px-3 py-2.5">Programme</th>
-                <th className="px-3 py-2.5 text-center">Category</th>
-                <th className="px-3 py-2.5 text-center">Validation Status</th>
-                <th className="px-3 py-2.5">Last Updated</th>
-                <th className="py-2.5 pr-4 pl-3 text-right sm:pr-5">Action</th>
+                <th className="px-3 py-3">Masked APAAR / Student ID</th>
+                <th className="px-3 py-3">Student Name</th>
+                <th className="px-3 py-3">Institution & State</th>
+                <th className="px-3 py-3">Programme</th>
+                <th className="px-3 py-3 text-center">Category</th>
+                <th className="px-3 py-3 text-center">Validation Status</th>
+                <th className="px-3 py-3">Last Updated</th>
+                <th className="py-3 pr-4 pl-3 text-right sm:pr-5">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#141b27]">
+            <tbody className="divide-y divide-white/5">
               {loading ? (
                 <tr>
                   <td colSpan={9} className="py-12 text-center text-zinc-400">
@@ -364,14 +364,14 @@ export const StudentsListPage: React.FC = () => {
                     <tr
                       key={stu.id}
                       className={`transition-colors ${
-                        isSelected ? "bg-[#111722]" : "hover:bg-[#0f141f]"
+                        isSelected ? "bg-emerald-500/10" : "hover:bg-white/[0.03]"
                       }`}
                     >
                       <td className="py-3.5 pr-2 pl-4 sm:pl-5">
                         <button
                           onClick={() => handleToggleRow(stu.id)}
                           aria-label={`Select student ${stu.fullName}`}
-                          className="text-zinc-400 hover:text-zinc-200"
+                          className="text-zinc-400 hover:text-zinc-200 cursor-pointer"
                         >
                           {isSelected ? (
                             <CheckSquare className="h-4 w-4 text-emerald-400" />
@@ -389,11 +389,11 @@ export const StudentsListPage: React.FC = () => {
                           {stu.institutionStudentId}
                         </div>
                       </td>
-                      <td className="px-3 py-3.5 font-medium text-zinc-100">
+                      <td className="px-3 py-3.5 font-medium text-white">
                         {stu.fullName}
                       </td>
                       <td className="px-3 py-3.5">
-                        <div className="max-w-[200px] truncate text-zinc-300">
+                        <div className="max-w-[200px] truncate text-zinc-200">
                           {stu.institutionName}
                         </div>
                         <div className="text-[10px] font-mono text-zinc-400">
@@ -401,7 +401,7 @@ export const StudentsListPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-3 py-3.5">
-                        <div className="max-w-[180px] truncate text-zinc-300">
+                        <div className="max-w-[180px] truncate text-zinc-200">
                           {stu.programme}
                         </div>
                         <div className="text-[10px] font-mono text-zinc-400">
@@ -409,28 +409,28 @@ export const StudentsListPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-3 py-3.5 text-center">
-                        <span className="rounded border border-[#1b2536] bg-[#0f141f] px-2 py-0.5 text-[10px] font-mono text-zinc-300">
+                        <span className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] font-mono text-zinc-300">
                           {stu.admissionCategory}
                         </span>
                       </td>
                       <td className="px-3 py-3.5 text-center">
                         {stu.validationStatus === "Verified" ? (
-                          <span className="inline-flex items-center gap-1 rounded border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-medium text-emerald-300">
                             <CheckCircle2 className="h-3 w-3" />
                             Verified
                           </span>
                         ) : stu.validationStatus === "Flagged Duplicate" ? (
-                          <span className="inline-flex items-center gap-1 rounded border border-rose-500/30 bg-rose-500/10 px-2 py-0.5 text-[10px] font-medium text-rose-400">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/15 px-2.5 py-0.5 text-[10px] font-medium text-rose-300">
                             <AlertOctagon className="h-3 w-3" />
                             Duplicate Flag
                           </span>
                         ) : stu.validationStatus === "Intake Over-Quota" ? (
-                          <span className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/15 px-2.5 py-0.5 text-[10px] font-medium text-amber-300">
                             <AlertTriangle className="h-3 w-3" />
                             Over-Quota
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-medium text-sky-400">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-sky-500/40 bg-sky-500/15 px-2.5 py-0.5 text-[10px] font-medium text-sky-300">
                             <Clock className="h-3 w-3" />
                             Pending
                           </span>
@@ -442,7 +442,7 @@ export const StudentsListPage: React.FC = () => {
                       <td className="py-3.5 pr-4 pl-3 text-right sm:pr-5">
                         <button
                           onClick={() => setActiveStudent(stu)}
-                          className="inline-flex items-center gap-1 rounded border border-[#1e2738] bg-[#0e131d] px-2.5 py-1 text-xs text-zinc-300 transition hover:border-emerald-500/40 hover:bg-[#121926] hover:text-white"
+                          className="inline-flex items-center gap-1 rounded-xl border border-white/15 bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-200 transition hover:border-emerald-500/40 hover:bg-emerald-500/15 hover:text-emerald-300 cursor-pointer backdrop-blur-md"
                         >
                           <Eye className="h-3 w-3 text-emerald-400" />
                           <span>Inspect</span>
@@ -457,17 +457,17 @@ export const StudentsListPage: React.FC = () => {
         </div>
 
         {/* Pagination Footer */}
-        <div className="flex items-center justify-between border-t border-[#161c28] px-4 py-3 sm:px-5">
+        <div className="flex items-center justify-between border-t border-white/10 px-4 py-3 sm:px-5">
           <div className="text-[11px] text-zinc-400 font-mono">
-            Showing Page <span className="text-zinc-200">{page}</span> of{" "}
-            <span className="text-zinc-200">{totalPages}</span> ({total} Student Records)
+            Showing Page <span className="text-zinc-200 font-semibold">{page}</span> of{" "}
+            <span className="text-zinc-200 font-semibold">{totalPages}</span> ({total} Student Records)
           </div>
 
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="flex items-center gap-1 rounded border border-[#1e2738] bg-[#0c1017] px-2.5 py-1 text-xs text-zinc-300 transition hover:bg-[#111722] disabled:opacity-40"
+              className="flex items-center gap-1 rounded-xl border border-white/15 bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-300 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-40 cursor-pointer backdrop-blur-md"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
               <span>Prev</span>
@@ -475,7 +475,7 @@ export const StudentsListPage: React.FC = () => {
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="flex items-center gap-1 rounded border border-[#1e2738] bg-[#0c1017] px-2.5 py-1 text-xs text-zinc-300 transition hover:bg-[#111722] disabled:opacity-40"
+              className="flex items-center gap-1 rounded-xl border border-white/15 bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-300 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-40 cursor-pointer backdrop-blur-md"
             >
               <span>Next</span>
               <ChevronRight className="h-3.5 w-3.5" />

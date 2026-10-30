@@ -106,17 +106,17 @@ export const ValidationCenterPage: React.FC = () => {
   return (
     <div className="space-y-6 pb-14">
       {/* Header */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-[#182130] pb-5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-5">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
               AICTE Academic Validation Center
             </h1>
-            <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-mono text-emerald-400">
+            <span className="rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-mono text-emerald-300 font-bold">
               Deterministic Engine v2.4
             </span>
           </div>
-          <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
+          <p className="mt-1 text-xs text-zinc-300 sm:text-sm">
             Explainable validation rules, APAAR identifier checks, intake capacity audits, and duplicate detection.
           </p>
         </div>
@@ -124,7 +124,7 @@ export const ValidationCenterPage: React.FC = () => {
         <button
           onClick={loadDashboard}
           aria-label="Re-execute deterministic rules engine"
-          className="flex items-center gap-1.5 self-start rounded border border-[#1e2738] bg-[#0c1017] px-3.5 py-1.5 text-xs font-medium text-zinc-200 transition hover:border-[#2b374e] hover:bg-[#121926] hover:text-white"
+          className="flex items-center gap-1.5 self-start rounded-xl border border-white/15 bg-white/[0.05] px-4 py-2 text-xs font-semibold text-zinc-200 transition hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-white cursor-pointer backdrop-blur-md"
         >
           <RefreshCw
             className={`h-3.5 w-3.5 text-emerald-400 ${loading ? "animate-spin" : ""}`}
@@ -137,7 +137,7 @@ export const ValidationCenterPage: React.FC = () => {
       {metrics && <ValidationMetricsGrid metrics={metrics} />}
 
       {/* FILTER TOOLBAR */}
-      <div className="rounded border border-[#182130] bg-[#0c1017] p-4 space-y-3">
+      <div className="rounded-2xl border border-white/10 bg-[#0c1424]/75 p-5 space-y-3 backdrop-blur-xl shadow-xl">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
           {/* Search Box */}
           <div className="lg:col-span-2 relative">
@@ -150,7 +150,7 @@ export const ValidationCenterPage: React.FC = () => {
                 setPage(1);
               }}
               placeholder="Search rule ID, finding, institution, or student reference..."
-              className="w-full rounded border border-[#1b2333] bg-[#090d14] py-1.5 pr-3 pl-8.5 font-mono text-xs text-zinc-200 placeholder-zinc-400 transition focus:border-emerald-500/50 focus:outline-none"
+              className="w-full rounded-xl border border-white/15 bg-white/[0.04] py-2 pr-3 pl-9 font-mono text-xs text-white placeholder-zinc-400 transition focus:border-emerald-500/60 focus:bg-white/[0.08] focus:outline-none backdrop-blur-md"
             />
           </div>
 
@@ -162,14 +162,14 @@ export const ValidationCenterPage: React.FC = () => {
                 setCategory(e.target.value as ValidationCategory | "All");
                 setPage(1);
               }}
-              className="w-full rounded border border-[#1b2333] bg-[#090d14] py-1.5 px-3 font-mono text-xs text-zinc-300 focus:border-emerald-500/50 focus:outline-none"
+              className="w-full rounded-xl border border-white/15 bg-white/[0.04] py-2 px-3 font-mono text-xs text-zinc-200 focus:border-emerald-500/60 focus:bg-[#0b101c] focus:outline-none backdrop-blur-md"
               aria-label="Filter by Validation Category"
             >
-              <option value="All">All Categories</option>
-              <option value="APAAR Identifier">APAAR Identifier</option>
-              <option value="Duplicate Detection">Duplicate Detection</option>
-              <option value="Intake Validation">Intake Validation</option>
-              <option value="Data Consistency">Data Consistency</option>
+              <option value="All" className="bg-[#0b101c]">All Categories</option>
+              <option value="APAAR Identifier" className="bg-[#0b101c]">APAAR Identifier</option>
+              <option value="Duplicate Detection" className="bg-[#0b101c]">Duplicate Detection</option>
+              <option value="Intake Validation" className="bg-[#0b101c]">Intake Validation</option>
+              <option value="Data Consistency" className="bg-[#0b101c]">Data Consistency</option>
             </select>
           </div>
 
@@ -181,13 +181,13 @@ export const ValidationCenterPage: React.FC = () => {
                 setSeverity(e.target.value as ValidationSeverity | "All");
                 setPage(1);
               }}
-              className="w-full rounded border border-[#1b2333] bg-[#090d14] py-1.5 px-3 font-mono text-xs text-zinc-300 focus:border-emerald-500/50 focus:outline-none"
+              className="w-full rounded-xl border border-white/15 bg-white/[0.04] py-2 px-3 font-mono text-xs text-zinc-200 focus:border-emerald-500/60 focus:bg-[#0b101c] focus:outline-none backdrop-blur-md"
               aria-label="Filter by Severity"
             >
-              <option value="All">All Severities</option>
-              <option value="Critical">Critical</option>
-              <option value="Warning">Warning</option>
-              <option value="Informational">Informational</option>
+              <option value="All" className="bg-[#0b101c]">All Severities</option>
+              <option value="Critical" className="bg-[#0b101c]">Critical</option>
+              <option value="Warning" className="bg-[#0b101c]">Warning</option>
+              <option value="Informational" className="bg-[#0b101c]">Informational</option>
             </select>
           </div>
 
@@ -199,15 +199,15 @@ export const ValidationCenterPage: React.FC = () => {
                 setReviewStatus(e.target.value as FindingReviewStatus | "All");
                 setPage(1);
               }}
-              className="w-full rounded border border-[#1b2333] bg-[#090d14] py-1.5 px-3 font-mono text-xs text-zinc-300 focus:border-emerald-500/50 focus:outline-none"
+              className="w-full rounded-xl border border-white/15 bg-white/[0.04] py-2 px-3 font-mono text-xs text-zinc-200 focus:border-emerald-500/60 focus:bg-[#0b101c] focus:outline-none backdrop-blur-md"
               aria-label="Filter by Review Status"
             >
-              <option value="All">All Statuses</option>
-              <option value="Open">Open</option>
-              <option value="Under Review">Under Review</option>
-              <option value="Explanation Requested">Explanation Requested</option>
-              <option value="Resolved">Resolved</option>
-              <option value="Dismissed False Positive">Dismissed False Positive</option>
+              <option value="All" className="bg-[#0b101c]">All Statuses</option>
+              <option value="Open" className="bg-[#0b101c]">Open</option>
+              <option value="Under Review" className="bg-[#0b101c]">Under Review</option>
+              <option value="Explanation Requested" className="bg-[#0b101c]">Explanation Requested</option>
+              <option value="Resolved" className="bg-[#0b101c]">Resolved</option>
+              <option value="Dismissed False Positive" className="bg-[#0b101c]">Dismissed False Positive</option>
             </select>
           </div>
 
@@ -219,12 +219,12 @@ export const ValidationCenterPage: React.FC = () => {
                 setAcademicYear(e.target.value as AcademicYear | "All");
                 setPage(1);
               }}
-              className="w-full rounded border border-[#1b2333] bg-[#090d14] py-1.5 px-3 font-mono text-xs text-zinc-300 focus:border-emerald-500/50 focus:outline-none"
+              className="w-full rounded-xl border border-white/15 bg-white/[0.04] py-2 px-3 font-mono text-xs text-zinc-200 focus:border-emerald-500/60 focus:bg-[#0b101c] focus:outline-none backdrop-blur-md"
               aria-label="Filter by Academic Year"
             >
-              <option value="All">All Academic Years</option>
+              <option value="All" className="bg-[#0b101c]">All Academic Years</option>
               {ACADEMIC_YEARS.map((yr) => (
-                <option key={yr} value={yr}>
+                <option key={yr} value={yr} className="bg-[#0b101c]">
                   AY {yr}
                 </option>
               ))}
@@ -239,12 +239,12 @@ export const ValidationCenterPage: React.FC = () => {
                 setInstitutionCode(e.target.value);
                 setPage(1);
               }}
-              className="w-full rounded border border-[#1b2333] bg-[#090d14] py-1.5 px-3 font-mono text-xs text-zinc-300 focus:border-emerald-500/50 focus:outline-none"
+              className="w-full rounded-xl border border-white/15 bg-white/[0.04] py-2 px-3 font-mono text-xs text-zinc-200 focus:border-emerald-500/60 focus:bg-[#0b101c] focus:outline-none backdrop-blur-md"
               aria-label="Filter by Institution"
             >
-              <option value="All">All Institutions</option>
+              <option value="All" className="bg-[#0b101c]">All Institutions</option>
               {MOCK_INSTITUTIONS.map((inst) => (
-                <option key={inst.id} value={inst.code}>
+                <option key={inst.id} value={inst.code} className="bg-[#0b101c]">
                   {inst.code} ({inst.name.split(" ")[0]})
                 </option>
               ))}
@@ -261,17 +261,17 @@ export const ValidationCenterPage: React.FC = () => {
       />
 
       {/* PAGINATION FOOTER */}
-      <div className="flex items-center justify-between border-t border-[#161c28] pt-2 px-1">
+      <div className="flex items-center justify-between border-t border-white/10 pt-4 px-1">
         <div className="text-[11px] text-zinc-400 font-mono">
-          Showing Page <span className="text-zinc-200">{page}</span> of{" "}
-          <span className="text-zinc-200">{totalPages}</span> ({total} Findings)
+          Showing Page <span className="text-zinc-200 font-semibold">{page}</span> of{" "}
+          <span className="text-zinc-200 font-semibold">{totalPages}</span> ({total} Findings)
         </div>
 
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
-            className="flex items-center gap-1 rounded border border-[#1e2738] bg-[#0c1017] px-2.5 py-1 text-xs text-zinc-300 transition hover:bg-[#111722] disabled:opacity-40"
+            className="flex items-center gap-1 rounded-xl border border-white/15 bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-300 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-40 cursor-pointer backdrop-blur-md"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
             <span>Prev</span>
@@ -279,7 +279,7 @@ export const ValidationCenterPage: React.FC = () => {
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="flex items-center gap-1 rounded border border-[#1e2738] bg-[#0c1017] px-2.5 py-1 text-xs text-zinc-300 transition hover:bg-[#111722] disabled:opacity-40"
+            className="flex items-center gap-1 rounded-xl border border-white/15 bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-300 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-40 cursor-pointer backdrop-blur-md"
           >
             <span>Next</span>
             <ChevronRight className="h-3.5 w-3.5" />

@@ -67,36 +67,36 @@ export const ValidationMetricsGrid: React.FC<ValidationMetricsGridProps> = ({
         const Icon = c.icon;
         const variantStyles =
           c.variant === "positive"
-            ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/10"
+            ? "border-emerald-500/40 text-emerald-300 bg-emerald-500/15"
             : c.variant === "danger"
-            ? "border-rose-500/30 text-rose-400 bg-rose-500/10"
+            ? "border-rose-500/40 text-rose-300 bg-rose-500/15"
             : c.variant === "warning"
-            ? "border-amber-500/30 text-amber-400 bg-amber-500/10"
-            : "border-[#1e2738] text-zinc-400 bg-[#111724]";
+            ? "border-amber-500/40 text-amber-300 bg-amber-500/15"
+            : "border-white/10 text-zinc-300 bg-white/[0.05]";
 
         return (
           <div
             key={c.label}
-            className="flex flex-col justify-between rounded border border-[#182130] bg-[#0c1017] p-3.5 transition hover:border-[#2b374e]"
+            className="flex flex-col justify-between rounded-2xl border border-white/10 bg-[#0c1424]/75 p-4 backdrop-blur-xl shadow-lg transition hover:border-emerald-500/40"
           >
-            <div className="flex items-start justify-between">
-              <span className="text-[11px] font-medium text-zinc-400 leading-tight">
+            <div className="flex items-start justify-between gap-1">
+              <span className="text-[11px] font-medium text-zinc-300 leading-tight">
                 {c.label}
               </span>
               <div
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded border ${variantStyles}`}
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border ${variantStyles}`}
               >
-                <Icon className="h-3 w-3" />
+                <Icon className="h-3.5 w-3.5" />
               </div>
             </div>
 
-            <div className="mt-2.5">
-              <span className="font-mono text-xl font-bold text-zinc-100">
+            <div className="mt-3">
+              <span className="font-mono text-xl font-bold text-white">
                 {c.value}
               </span>
             </div>
 
-            <div className="mt-2 border-t border-[#141b27] pt-1.5 text-[10px] text-zinc-400 truncate">
+            <div className="mt-2 border-t border-white/10 pt-2 text-[10px] text-zinc-400 truncate">
               {c.subtext}
             </div>
           </div>
