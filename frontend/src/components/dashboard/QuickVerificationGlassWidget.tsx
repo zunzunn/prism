@@ -19,9 +19,9 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { formatDateTime } from "@/lib/utils";
 
 const SAMPLE_REFERENCES = [
-  { ref: "VRF-2024-00101", label: "COEP Degree (Valid)" },
-  { ref: "VRF-2024-00102", label: "DTU Enrolment (Valid)" },
-  { ref: "VRF-2024-00103", label: "Jadavpur (Under Review)" },
+  { ref: "VRF-2026-V8892", label: "COEP (Valid)" },
+  { ref: "VRF-2026-R4109", label: "DTU (Review)" },
+  { ref: "VRF-2026-D9901", label: "Jadavpur (Cleared)" },
 ];
 
 export const QuickVerificationGlassWidget: React.FC = () => {
@@ -94,7 +94,7 @@ export const QuickVerificationGlassWidget: React.FC = () => {
               type="text"
               value={referenceInput}
               onChange={(e) => setReferenceInput(e.target.value)}
-              placeholder="Enter opaque reference (e.g. VRF-2024-00101)..."
+              placeholder="Enter opaque reference (e.g. VRF-2026-V8892)..."
               className="w-full rounded-xl border border-white/15 bg-white/[0.04] py-2.5 pr-4 pl-10 font-mono text-xs text-white placeholder-zinc-400 transition focus:border-emerald-500/60 focus:bg-white/[0.08] focus:outline-none backdrop-blur-md"
             />
           </div>

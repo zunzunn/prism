@@ -158,6 +158,18 @@ console.log("==================================================\n");
   console.log("✔ Test 10: Student portal lifecycle tracking & issue resolution passed.");
 }
 
+// Test 11: Rapid Verification Console & Institutional Dossier Reference Resolution
+{
+  const testRefs = ["VRF-2026-V8892", "VRF-2026-R4109", "VRF-2026-D9901"];
+  for (const ref of testRefs) {
+    const res = await verifyCredential(ref, "institution", "AICTE National Node", "Live Rapid Audit Test");
+    assert(res.reference === ref);
+    assert(res.cryptographicProofHash.length === 64, "Must contain 64-char SHA-256 seal");
+    assert(res.institutionName.length > 0, "Must contain campus name");
+  }
+  console.log("✔ Test 11: Rapid verification console & multi-reference audit passed.");
+}
+
 console.log("\n==================================================");
 console.log(" ALL ACADEMIC VERIFICATION & PORTAL TESTS PASSED");
 console.log("==================================================\n");
