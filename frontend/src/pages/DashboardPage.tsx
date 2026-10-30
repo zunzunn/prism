@@ -14,6 +14,7 @@ import { GovernanceMetricsGrid } from "@/components/dashboard/GovernanceMetricsG
 import { IntakeUtilizationPanel } from "@/components/dashboard/IntakeUtilizationPanel";
 import { InstitutionIntakeChart } from "@/components/charts/InstitutionIntakeChart";
 import { ValidationHealthChart } from "@/components/charts/ValidationHealthChart";
+import { QuickVerificationGlassWidget } from "@/components/dashboard/QuickVerificationGlassWidget";
 import { RecentSubmissionsTable } from "@/components/dashboard/RecentSubmissionsTable";
 import { DuplicateAlertsTable } from "@/components/dashboard/DuplicateAlertsTable";
 import { AuditActivityFeed } from "@/components/dashboard/AuditActivityFeed";
@@ -97,11 +98,11 @@ export const DashboardPage: React.FC = () => {
     <div className="space-y-6 pb-12">
       {/* Interactive Demonstration Banner when demo=true */}
       {isDemo && (
-        <div className="flex items-center justify-between rounded border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs text-emerald-300">
+        <div className="flex items-center justify-between rounded-2xl border border-emerald-500/30 bg-emerald-950/40 px-4 py-3 text-xs text-emerald-200 backdrop-blur-xl shadow-lg shadow-emerald-950/30">
           <div className="flex items-center gap-2.5">
             <Sparkles className="h-4 w-4 shrink-0 text-emerald-400" />
             <span>
-              <strong className="font-semibold text-emerald-200">
+              <strong className="font-semibold text-emerald-100">
                 Interactive Demo Active:
               </strong>{" "}
               Simulating national AICTE governance node with cross-institutional
@@ -111,7 +112,7 @@ export const DashboardPage: React.FC = () => {
           <button
             onClick={dismissDemo}
             aria-label="Dismiss demo banner"
-            className="rounded p-1 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-200 transition"
+            className="rounded-lg p-1 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-200 transition cursor-pointer"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -119,17 +120,17 @@ export const DashboardPage: React.FC = () => {
       )}
 
       {/* DASHBOARD HEADER */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b border-[#182130] pb-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b border-white/10 pb-5">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
               AICTE National Academic Governance Dashboard
             </h1>
-            <span className="hidden sm:inline-flex rounded border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-mono font-semibold text-emerald-400 uppercase">
+            <span className="hidden sm:inline-flex rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-mono font-bold text-emerald-300 uppercase">
               Live Hub
             </span>
           </div>
-          <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
+          <p className="mt-1 text-xs text-zinc-300 sm:text-sm">
             Real-time APAAR validation, intake monitoring, and duplicate detection
             across approved institutions.
           </p>
@@ -143,11 +144,11 @@ export const DashboardPage: React.FC = () => {
             <select
               value={academicYear}
               onChange={(e) => setAcademicYear(e.target.value as AcademicYear)}
-              className="appearance-none rounded border border-[#1e2738] bg-[#0c1017] py-1.5 pl-8 pr-7 text-xs text-zinc-200 transition hover:border-[#2b374e] focus:border-emerald-500/50 focus:outline-none"
+              className="appearance-none rounded-xl border border-white/15 bg-white/[0.04] py-1.5 pl-8 pr-7 text-xs text-zinc-200 transition hover:border-emerald-500/40 focus:border-emerald-500/60 focus:bg-white/[0.08] focus:outline-none backdrop-blur-md"
               aria-label="Filter by Academic Year"
             >
               {ACADEMIC_YEARS.map((yr) => (
-                <option key={yr} value={yr} className="bg-[#0c1017] text-zinc-200">
+                <option key={yr} value={yr} className="bg-[#0b101c] text-zinc-200">
                   AY {yr}
                 </option>
               ))}
@@ -160,11 +161,11 @@ export const DashboardPage: React.FC = () => {
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value as StateUT)}
-              className="appearance-none rounded border border-[#1e2738] bg-[#0c1017] py-1.5 pl-8 pr-7 text-xs text-zinc-200 transition hover:border-[#2b374e] focus:border-emerald-500/50 focus:outline-none"
+              className="appearance-none rounded-xl border border-white/15 bg-white/[0.04] py-1.5 pl-8 pr-7 text-xs text-zinc-200 transition hover:border-emerald-500/40 focus:border-emerald-500/60 focus:bg-white/[0.08] focus:outline-none backdrop-blur-md"
               aria-label="Filter by State or Union Territory"
             >
               {STATE_LIST.map((st) => (
-                <option key={st} value={st} className="bg-[#0c1017] text-zinc-200">
+                <option key={st} value={st} className="bg-[#0b101c] text-zinc-200">
                   {st}
                 </option>
               ))}
@@ -176,7 +177,7 @@ export const DashboardPage: React.FC = () => {
             onClick={loadData}
             disabled={refreshing}
             aria-label="Refresh dashboard metrics"
-            className="flex items-center gap-1.5 rounded border border-[#1e2738] bg-[#0c1017] px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:border-[#2b374e] hover:bg-[#121824] hover:text-white disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.05] px-3.5 py-1.5 text-xs font-semibold text-zinc-200 transition hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-white disabled:opacity-50 cursor-pointer backdrop-blur-md"
           >
             <RefreshCw
               className={`h-3.5 w-3.5 text-emerald-400 ${
@@ -217,61 +218,64 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
+          {/* CRYPTOGRAPHIC VERIFICATION GLASS WIDGET */}
+          <QuickVerificationGlassWidget />
+
           {/* LOWER DASHBOARD SECTION (TABBED HIGH-DENSITY AUDIT & ANOMALIES) */}
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-[#182130] pb-2 gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-2 gap-3">
               <div className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto pb-1 sm:pb-0">
                 <button
                   onClick={() => setActiveTab("duplicates")}
-                  className={`flex items-center gap-2 rounded px-3 py-1.5 text-xs font-semibold transition ${
+                  className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition cursor-pointer backdrop-blur-md ${
                     activeTab === "duplicates"
-                      ? "border border-rose-500/30 bg-rose-500/10 text-rose-300"
-                      : "text-zinc-400 hover:bg-[#0e131d] hover:text-zinc-200"
+                      ? "border border-rose-500/40 bg-rose-500/15 text-rose-300 shadow-sm shadow-rose-950/40"
+                      : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200"
                   }`}
                 >
                   <AlertOctagon className="h-3.5 w-3.5 text-rose-400" />
                   <span>Duplicate Enrolments</span>
-                  <span className="rounded bg-rose-500/20 px-1.5 py-0.2 text-[10px] font-mono text-rose-400">
+                  <span className="rounded-full bg-rose-500/20 px-2 py-0.5 text-[10px] font-mono font-bold text-rose-400">
                     {data.duplicateAlerts.length}
                   </span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab("submissions")}
-                  className={`flex items-center gap-2 rounded px-3 py-1.5 text-xs font-semibold transition ${
+                  className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition cursor-pointer backdrop-blur-md ${
                     activeTab === "submissions"
-                      ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-                      : "text-zinc-400 hover:bg-[#0e131d] hover:text-zinc-200"
+                      ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 shadow-sm shadow-emerald-950/40"
+                      : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200"
                   }`}
                 >
                   <FileText className="h-3.5 w-3.5 text-emerald-400" />
                   <span>Recent Submissions</span>
-                  <span className="rounded bg-[#161f2e] px-1.5 py-0.2 text-[10px] font-mono text-zinc-300">
+                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-mono text-zinc-300">
                     {data.recentSubmissions.length}
                   </span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab("institutions")}
-                  className={`flex items-center gap-2 rounded px-3 py-1.5 text-xs font-semibold transition ${
+                  className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition cursor-pointer backdrop-blur-md ${
                     activeTab === "institutions"
-                      ? "border border-amber-500/30 bg-amber-500/10 text-amber-300"
-                      : "text-zinc-400 hover:bg-[#0e131d] hover:text-zinc-200"
+                      ? "border border-amber-500/40 bg-amber-500/15 text-amber-300 shadow-sm shadow-amber-950/40"
+                      : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200"
                   }`}
                 >
                   <Building2 className="h-3.5 w-3.5 text-amber-400" />
                   <span>Institutions Requiring Review</span>
-                  <span className="rounded bg-amber-500/20 px-1.5 py-0.2 text-[10px] font-mono text-amber-400">
+                  <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-400">
                     2
                   </span>
                 </button>
 
                 <button
                   onClick={() => setActiveTab("audit")}
-                  className={`flex items-center gap-2 rounded px-3 py-1.5 text-xs font-semibold transition ${
+                  className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition cursor-pointer backdrop-blur-md ${
                     activeTab === "audit"
-                      ? "border border-sky-500/30 bg-sky-500/10 text-sky-300"
-                      : "text-zinc-400 hover:bg-[#0e131d] hover:text-zinc-200"
+                      ? "border border-sky-500/40 bg-sky-500/15 text-sky-300 shadow-sm shadow-sky-950/40"
+                      : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200"
                   }`}
                 >
                   <Activity className="h-3.5 w-3.5 text-sky-400" />
@@ -281,7 +285,7 @@ export const DashboardPage: React.FC = () => {
 
               <div className="text-[11px] font-mono text-zinc-400">
                 Last Synced:{" "}
-                <span className="text-zinc-300">
+                <span className="text-zinc-200 font-semibold">
                   {new Date(data.refreshedAt).toLocaleTimeString("en-IN")}
                 </span>
               </div>
@@ -300,35 +304,35 @@ export const DashboardPage: React.FC = () => {
             )}
 
             {activeTab === "institutions" && (
-              <div className="rounded border border-[#182130] bg-[#0c1017] p-5 space-y-3">
-                <div className="flex items-center justify-between border-b border-[#161c28] pb-3">
+              <div className="rounded-2xl border border-white/10 bg-[#0c1424]/75 p-6 backdrop-blur-xl shadow-xl space-y-4">
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
                   <div>
-                    <h3 className="text-xs font-bold text-zinc-100">
+                    <h3 className="text-sm font-bold text-white">
                       Technical Institutions Requiring Regulatory Review
                     </h3>
-                    <p className="text-[11px] text-zinc-400">
+                    <p className="text-xs text-zinc-300">
                       Campuses flagged for potential supernumerary breach or anomalous enrollment surges
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  <div className="rounded border border-amber-500/30 bg-amber-500/5 p-4 flex flex-col justify-between">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-4.5 flex flex-col justify-between backdrop-blur-md">
                     <div>
                       <div className="flex items-start justify-between">
                         <div>
-                          <h4 className="text-xs font-bold text-zinc-100">
+                          <h4 className="text-xs font-bold text-white">
                             Delhi Technological University (DTU)
                           </h4>
                           <span className="font-mono text-[10px] text-zinc-400">
                             Code: 1-882910344 • State: Delhi
                           </span>
                         </div>
-                        <span className="rounded border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-mono text-amber-400">
+                        <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-2.5 py-0.5 text-[10px] font-mono font-bold text-amber-300">
                           Capacity Review
                         </span>
                       </div>
-                      <p className="mt-2 text-xs text-zinc-300">
+                      <p className="mt-2 text-xs text-zinc-300 leading-relaxed">
                         Reported 2,410 enrollments vs 2,400 sanctioned capacity (+10). Nodal officer must submit EWS/TFW supernumerary allotment documentation for reconciliation.
                       </p>
                     </div>
@@ -336,29 +340,29 @@ export const DashboardPage: React.FC = () => {
                       <span className="text-[10px] font-mono text-zinc-400">Status: Notice Sent</span>
                       <Link
                         to="/intake"
-                        className="text-xs font-medium text-amber-400 hover:text-amber-300"
+                        className="text-xs font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-1"
                       >
                         Inspect Quota Breakup →
                       </Link>
                     </div>
                   </div>
 
-                  <div className="rounded border border-rose-500/30 bg-rose-500/5 p-4 flex flex-col justify-between">
+                  <div className="rounded-xl border border-rose-500/30 bg-rose-500/[0.06] p-4.5 flex flex-col justify-between backdrop-blur-md">
                     <div>
                       <div className="flex items-start justify-between">
                         <div>
-                          <h4 className="text-xs font-bold text-zinc-100">
+                          <h4 className="text-xs font-bold text-white">
                             Institute of Engineering & Tech, Lucknow
                           </h4>
                           <span className="font-mono text-[10px] text-zinc-400">
                             Code: 1-772910291 • State: Uttar Pradesh
                           </span>
                         </div>
-                        <span className="rounded border border-rose-500/40 bg-rose-500/10 px-2 py-0.5 text-[10px] font-mono text-rose-400">
+                        <span className="rounded-full border border-rose-500/40 bg-rose-500/15 px-2.5 py-0.5 text-[10px] font-mono font-bold text-rose-300">
                           APAAR Parity Gap
                         </span>
                       </div>
-                      <p className="mt-2 text-xs text-zinc-300">
+                      <p className="mt-2 text-xs text-zinc-300 leading-relaxed">
                         Batch AICTE-2026-B8925 contains 25 unverified student identity records failing national format hash match. Manual nodal endorsement pending.
                       </p>
                     </div>
@@ -366,7 +370,7 @@ export const DashboardPage: React.FC = () => {
                       <span className="text-[10px] font-mono text-zinc-400">Status: Hold Placed</span>
                       <Link
                         to="/validation"
-                        className="text-xs font-medium text-rose-400 hover:text-rose-300"
+                        className="text-xs font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-1"
                       >
                         Review Batch Records →
                       </Link>

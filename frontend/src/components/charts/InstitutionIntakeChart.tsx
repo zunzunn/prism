@@ -33,8 +33,8 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
 }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded border border-[#1e2738] bg-[#0c1017] p-3 text-xs shadow-xl backdrop-blur-md">
-        <p className="font-semibold text-zinc-100 max-w-[240px]">{label}</p>
+      <div className="rounded-xl border border-white/15 bg-[#080d19]/90 p-3 text-xs shadow-2xl backdrop-blur-xl">
+        <p className="font-semibold text-white max-w-[240px]">{label}</p>
         <div className="mt-2 space-y-1">
           {payload.map((entry, index) => (
             <div
@@ -48,7 +48,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({
                 />
                 <span className="text-zinc-400">{entry.name}:</span>
               </div>
-              <span className="font-semibold text-zinc-200">
+              <span className="font-semibold text-zinc-100">
                 {entry.value.toLocaleString("en-IN")}
               </span>
             </div>
@@ -71,14 +71,14 @@ export const InstitutionIntakeChart: React.FC<InstitutionIntakeChartProps> = ({
   }));
 
   return (
-    <div className="flex flex-col justify-between rounded border border-[#182130] bg-[#0c1017] p-5">
-      <div className="flex items-center justify-between border-b border-[#161c28] pb-3">
+    <div className="flex flex-col justify-between rounded-2xl border border-white/10 bg-[#0c1424]/75 p-6 backdrop-blur-xl shadow-[0_16px_36px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.12)]">
+      <div className="flex items-center justify-between border-b border-white/10 pb-3">
         <div className="flex items-center space-x-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded border border-[#1f2838] bg-[#111722] text-emerald-400">
-            <Building2 className="h-3.5 w-3.5" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/15 text-emerald-400 shadow-sm shadow-emerald-950/40">
+            <Building2 className="h-4 w-4" />
           </div>
           <div>
-            <h3 className="text-xs font-bold text-zinc-100">
+            <h3 className="text-xs font-bold text-white">
               Intake Utilization by Top Institutions
             </h3>
             <p className="text-[11px] text-zinc-400">
@@ -86,7 +86,7 @@ export const InstitutionIntakeChart: React.FC<InstitutionIntakeChartProps> = ({
             </p>
           </div>
         </div>
-        <span className="rounded border border-[#1f2838] bg-[#0f141f] px-2 py-0.5 font-mono text-[10px] text-zinc-400">
+        <span className="rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-0.5 font-mono text-[10px] text-zinc-300">
           Capacity Audit
         </span>
       </div>
@@ -100,7 +100,7 @@ export const InstitutionIntakeChart: React.FC<InstitutionIntakeChartProps> = ({
           >
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="#182030"
+              stroke="#20293d"
               vertical={false}
             />
             <XAxis
@@ -131,21 +131,21 @@ export const InstitutionIntakeChart: React.FC<InstitutionIntakeChartProps> = ({
               name="Approved Intake"
               dataKey="approvedIntake"
               fill="#334155"
-              radius={[3, 3, 0, 0]}
+              radius={[4, 4, 0, 0]}
             />
             <Bar
               name="Reported Enrolment"
               dataKey="reportedEnrolment"
               fill="#10b981"
-              radius={[3, 3, 0, 0]}
+              radius={[4, 4, 0, 0]}
             />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="mt-2 border-t border-[#141b27] pt-2 text-[10px] text-zinc-400 flex items-center justify-between">
+      <div className="mt-2 border-t border-white/10 pt-2 text-[10px] text-zinc-400 flex items-center justify-between">
         <span>* Supernumerary quotas permitted per AICTE approval handbook</span>
-        <span className="font-mono text-emerald-400">Top 7 Campuses</span>
+        <span className="font-mono text-emerald-400 font-semibold">Top 7 Campuses</span>
       </div>
     </div>
   );
